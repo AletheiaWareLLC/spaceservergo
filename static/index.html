@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <head>
+        <title>Space</title>
+    </head>
+
+    <body>
+        <h1>Space</h1>
+        <p>Welcome to Space, please follow the steps below to get setup;</p>
+        <ol>
+            <li>
+                <p>Download Space for your device;</p>
+                <ul>
+                    <li>Android - <a download href="Space">Download</a></li>
+                    <li>iOS - <a download href="Space">Download</a></li>
+                    <li>Linux - <a download href="Space">Download</a></li>
+                    <li>Mac - <a download href="Space">Download</a></li>
+                    <li>Windows - <a download href="Space">Download</a></li>
+                </ul>
+            </li>
+            <li>
+                <p>Generate your key pair consisting of a public key (which will be registered with your account) and a private key (which does not leave your possession).</p>
+                <pre><code>$> ./space</code></pre>
+                <samp>
+                    Creating keystore under /Users/<strong>username</strong>/bc
+                    <br/>
+                    Enter keystore password:
+                    <br/>
+                    Confirm keystore password:
+                    <br/>
+                    Generating RSA 4096 Public/Private Key Pair
+                    <br/>
+                    Successfully created keystore!
+                    <br/>
+                    <br/>
+                    Register your public key and billing information at https://space.aletheiaware.com/register
+                    <br/>
+                    <br/>
+                    -----BEGIN RSA PUBLIC KEY-----
+                    <br/>
+                    ...
+                    <br/>
+                    ...
+                    <br/>
+                    -----END RSA PUBLIC KEY-----
+                </samp>
+            </li>
+            <li>
+                <p>Follow the URL given by Space which will return you to this website to complete your registration and provide the following information;</p>
+                <ul>
+                    <li>Alias - what you would like us to call you.</li>
+                    <li>Email - how you would like us to contact you.</li>
+                    <li>Billing Info - how you would like to pay (this information is handled and stored by <a href="stripe.com">Stripe</a>);
+                        <ul>
+                            <li>Card Holder Name</li>
+                            <li>Card Number</li>
+                            <li>Card Expiry Date</li>
+                            <li>Card Verification Code (CVC)</li>
+                            <li>Billing Address</li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ol>
+    </body>
+</html>

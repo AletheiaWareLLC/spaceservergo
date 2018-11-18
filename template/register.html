@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <head>
+        <title>Space</title>
+    </head>
+
+    <body>
+        <h1>Space</h1>
+        <p>Welcome to Space, please provide the following information to register;</p>
+        <form action="register" method="POST">
+            Public Key<br>
+            <textarea name="publicKey" rows="15" cols="60"></textarea>
+            <br>
+            <br>
+            <script src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+                data-billing-address="true"
+                data-description="{{ .Description }}"
+                data-key="{{ .Key }}"
+                data-label="Register"
+                data-locale="auto"
+                data-name="{{ .Name }}"
+                data-zip-code="true"></script>
+        </form>
+    </body>
+</html>
