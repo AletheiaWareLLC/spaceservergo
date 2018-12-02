@@ -78,6 +78,8 @@ func main() {
 	go bind(bc.PORT_BLOCK, handleBlock)
 	// Serve Head Requests
 	go bind(bc.PORT_HEAD, handleHead)
+	// Serve Key Share Requests
+	go bind(bc.PORT_KEYS, handleKeys)
 	// Serve Status Requests
 	go bind(bc.PORT_STATUS, handleStatus)
 	// Serve Write Requests
@@ -123,6 +125,32 @@ func redirect(w http.ResponseWriter, r *http.Request) {
 func serve(w http.ResponseWriter, r *http.Request) {
 	log.Println("URL Path", r.URL.Path)
 	switch r.URL.Path {
+	case "/keys":
+		switch r.Method {
+		case "GET":
+			// TODO get public key hash from params
+		case "POST":
+			// TODO read key pair from data
+			log.Println("Request", r)
+			publicKeyFormat := r.PostFormValue("publicKeyFormat")
+			log.Println("PublicKeyFormat", publicKeyFormat)
+			publicKeyString := r.PostFormValue("publicKey")
+			log.Println("PublicKey", publicKeyString)
+			privateKeyFormat := r.PostFormValue("privateKeyFormat")
+			log.Println("PrivateKeyFormat", privateKeyFormat)
+			privateKeyString := r.PostFormValue("privateKey")
+			log.Println("PrivateKey", privateKeyString)
+
+			publicKeyBytes, err := base64.RawURLEncoding.DecodeString(publicKeyString)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			publicKeyHash := bcutils.Hash(publicKeyBytes)
+			// TODO
+		default:
+			log.Println("Unsupported method", r.Method)
+		}
 	case "/register":
 		switch r.Method {
 		case "GET":
@@ -360,6 +388,12 @@ func handleHead(conn net.Conn) {
 		log.Println(err)
 		return
 	}
+}
+
+func handleKeys(conn net.Conn) {
+	defer conn.Close()
+	log.Println("handleKeys:22322")
+	log.Println("Keys Request Handler not yet implemented", conn)
 }
 
 func handleStatus(conn net.Conn) {
