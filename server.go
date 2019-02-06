@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 Aletheia Ware LLC
+ * Copyright 2019 Aletheia Ware LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,436 +17,409 @@
 package main
 
 import (
-	"bytes"
+	"bufio"
 	"crypto/rsa"
 	"encoding/base64"
-	"errors"
 	"fmt"
-	bc "github.com/AletheiaWareLLC/bcgo"
-	bcutils "github.com/AletheiaWareLLC/bcgo/utils"
-	space "github.com/AletheiaWareLLC/spacego"
+	"github.com/AletheiaWareLLC/aliasgo"
+	"github.com/AletheiaWareLLC/bcgo"
+	"github.com/AletheiaWareLLC/bcnetgo"
+	"github.com/AletheiaWareLLC/financego"
+	"github.com/AletheiaWareLLC/spacego"
 	"github.com/golang/protobuf/proto"
-	stripe "github.com/stripe/stripe-go"
-	customer "github.com/stripe/stripe-go/customer"
-	subscription "github.com/stripe/stripe-go/sub"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
 	"os"
-	"os/user"
-	"path"
-	"strings"
 	"time"
 )
 
-var Cache string
-var Node *bc.Node
-var Channels map[string]*bc.Channel
-
 func main() {
-	// Load cache directory
-	c, ok := os.LookupEnv("CACHE")
-	if !ok {
-		u, err := user.Current()
+	// Serve Block Requests
+	go bcnetgo.Bind(bcgo.PORT_BLOCK, bcnetgo.HandleBlock)
+	// Serve Head Requests
+	go bcnetgo.Bind(bcgo.PORT_HEAD, bcnetgo.HandleHead)
+	// Serve Upload Requests
+	go bcnetgo.Bind(spacego.PORT_UPLOAD, HandleUpload)
+
+	// Serve Web Requests
+	http.HandleFunc("/", bcnetgo.HandleStatic)
+	http.HandleFunc("/alias", HandleAlias)
+	ks := &bcnetgo.KeyStore{
+		Keys: make(map[string]*bcgo.KeyShare),
+	}
+	http.HandleFunc("/keys", ks.HandleKeys)
+	http.HandleFunc("/status", bcnetgo.HandleStatus)
+	http.HandleFunc("/stripe-webhook", HandleStripeWebhook)
+	http.HandleFunc("/subscription", HandleSubscribe)
+	// Serve HTTPS HTML Requests
+	go log.Fatal(http.ListenAndServeTLS(":443", "server.crt", "server.key", nil))
+	// Redirect HTTP HTML Requests to HTTPS
+	log.Fatal(http.ListenAndServe(":80", http.HandlerFunc(bcnetgo.HTTPSRedirect)))
+	/*
+		// Serve HTTP HTML Requests
+		log.Fatal(http.ListenAndServe(":80", nil))
+	*/
+}
+
+func HandleAlias(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.RemoteAddr, r.Proto, r.Method, r.Host, r.URL.Path)
+	switch r.Method {
+	case "GET":
+		query := r.URL.Query()
+		var a string
+		if results, ok := query["alias"]; ok && len(results) == 1 {
+			a = results[0]
+		}
+		log.Println("Alias", a)
+		var publicKey string
+		if results, ok := query["publicKey"]; ok && len(results) == 1 {
+			publicKey = results[0]
+		}
+		log.Println("PublicKey", publicKey)
+		t, err := template.ParseFiles("html/template/alias.html")
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		c = path.Join(u.HomeDir, "bc")
+		data := struct {
+			Alias     string
+			PublicKey string
+		}{
+			Alias:     a,
+			PublicKey: publicKey,
+		}
+		log.Println("Data", data)
+		err = t.Execute(w, data)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	case "POST":
+		r.ParseForm()
+		log.Println("Request", r)
+		a := r.Form["alias"]
+		log.Println("Alias", a)
+		publicKey := r.Form["publicKey"]
+		log.Println("PublicKey", publicKey)
+		publicKeyFormat := r.Form["publicKeyFormat"]
+		log.Println("PublicKeyFormat", publicKeyFormat)
+		signature := r.Form["signature"]
+		log.Println("Signature", signature)
+		signatureAlgorithm := r.Form["signatureAlgorithm"]
+		log.Println("SignatureAlgorithm", signatureAlgorithm)
+
+		pubFormatValue, ok := bcgo.PublicKeyFormat_value[publicKeyFormat[0]]
+		if !ok {
+			log.Println("Unrecognized Public Key Format")
+			return
+		}
+		pubFormat := bcgo.PublicKeyFormat(pubFormatValue)
+
+		sig, err := base64.RawURLEncoding.DecodeString(signature[0])
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		sigAlgValue, ok := bcgo.SignatureAlgorithm_value[signatureAlgorithm[0]]
+		if !ok {
+			log.Println("Unrecognized Signature")
+			return
+		}
+		sigAlg := bcgo.SignatureAlgorithm(sigAlgValue)
+
+		record, err := aliasgo.CreateAliasRecord(a[0], []byte(publicKey[0]), pubFormat, sig, sigAlg)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		data, err := proto.Marshal(record)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		entries := [1]*bcgo.BlockEntry{
+			&bcgo.BlockEntry{
+				RecordHash: bcgo.Hash(data),
+				Record:     record,
+			},
+		}
+
+		node, err := bcgo.GetNode()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		aliases, err := aliasgo.OpenAliasChannel()
+		if err != nil {
+			log.Println(err)
+			return
+		}
+
+		// Mine record into blockchain
+		hash, block, err := node.Mine(aliases, entries[:])
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		node.Multicast(aliases, hash, block)
+	default:
+		log.Println("Unsupported method", r.Method)
 	}
-	Cache = c
-	// Load private key
-	k, err := space.GetOrCreatePrivateKey()
+}
+
+func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.RemoteAddr, r.Proto, r.Method, r.Host, r.URL.Path)
+	log.Println("Stripe Webhook", r)
+	data, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	Node = &bc.Node{
-		Key: k,
-	}
-	registration := &bc.Channel{
-		Name:      space.SPACE_REGISTRATION,
-		Threshold: bc.THRESHOLD_STANDARD,
-		Cache:     Cache,
-	}
-	registration.LoadHead()
-	Channels = make(map[string]*bc.Channel)
-	Channels[space.SPACE_REGISTRATION] = registration
-
-	// Serve Block Requests
-	go bind(bc.PORT_BLOCK, handleBlock)
-	// Serve Head Requests
-	go bind(bc.PORT_HEAD, handleHead)
-	// Serve Key Share Requests
-	go bind(bc.PORT_KEYS, handleKeys)
-	// Serve Status Requests
-	go bind(bc.PORT_STATUS, handleStatus)
-	// Serve Write Requests
-	go bind(bc.PORT_WRITE, handleWrite)
-	/*
-		// Serve HTTPS HTML Requests
-		go log.Fatal(http.ListenAndServeTLS(":443", "server.crt", "server.key", http.HandlerFunc(serve)))
-		// Redirect HTTP HTML Requests to HTTPS
-		log.Fatal(http.ListenAndServe(":80", http.HandlerFunc(redirect)))
-	*/
-	// Serve HTTP HTML Requests
-	log.Fatal(http.ListenAndServe(":80", http.HandlerFunc(serve)))
-}
-
-func bind(port int, handler func(net.Conn)) {
-	address := fmt.Sprintf(":%d", port)
-	l, err := net.Listen("tcp", address)
+	event, err := financego.ConstructEvent(data, r.Header.Get("Stripe-Signature"))
 	if err != nil {
-		log.Println("Error listening", err)
+		log.Println(err)
 		return
 	}
-	defer l.Close()
-	log.Println("Listening on" + address)
-	for {
-		conn, err := l.Accept()
+
+	log.Println("Event", event)
+}
+
+func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.RemoteAddr, r.Proto, r.Method, r.Host, r.URL.Path)
+	switch r.Method {
+	case "GET":
+		query := r.URL.Query()
+		var a string
+		if results, ok := query["alias"]; ok && len(results) == 1 {
+			a = results[0]
+		}
+		log.Println("Alias", a)
+		var publicKey string
+		if results, ok := query["publicKey"]; ok && len(results) == 1 {
+			publicKey = results[0]
+		}
+		log.Println("PublicKey", publicKey)
+		t, err := template.ParseFiles("html/template/subscription.html")
 		if err != nil {
-			log.Println("Error accepting", err)
+			log.Println(err)
 			return
 		}
-		go handler(conn)
-	}
-}
-
-func redirect(w http.ResponseWriter, r *http.Request) {
-	target := "https://" + r.Host + r.URL.Path
-	if len(r.URL.RawQuery) > 0 {
-		target += "?" + r.URL.RawQuery
-	}
-	log.Println("Redirecting to", target)
-	http.Redirect(w, r, target, http.StatusTemporaryRedirect)
-}
-
-func serve(w http.ResponseWriter, r *http.Request) {
-	log.Println("URL Path", r.URL.Path)
-	switch r.URL.Path {
-	case "/keys":
-		switch r.Method {
-		case "GET":
-			// TODO get public key hash from params
-		case "POST":
-			// TODO read key pair from data
-			log.Println("Request", r)
-			publicKeyFormat := r.PostFormValue("publicKeyFormat")
-			log.Println("PublicKeyFormat", publicKeyFormat)
-			publicKeyString := r.PostFormValue("publicKey")
-			log.Println("PublicKey", publicKeyString)
-			privateKeyFormat := r.PostFormValue("privateKeyFormat")
-			log.Println("PrivateKeyFormat", privateKeyFormat)
-			privateKeyString := r.PostFormValue("privateKey")
-			log.Println("PrivateKey", privateKeyString)
-
-			publicKeyBytes, err := base64.RawURLEncoding.DecodeString(publicKeyString)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			publicKeyHash := bcutils.Hash(publicKeyBytes)
-			// TODO
-		default:
-			log.Println("Unsupported method", r.Method)
+		data := struct {
+			Description string
+			Key         string
+			Name        string
+			Alias       string
+			PublicKey   string
+		}{
+			Description: "Mining Service",
+			Key:         os.Getenv("STRIPE_PUBLISHABLE_KEY"),
+			Name:        "Aletheia Ware LLC",
+			Alias:       a,
+			PublicKey:   publicKey,
 		}
-	case "/register":
-		switch r.Method {
-		case "GET":
-			t, err := template.ParseFiles("template/register.html")
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			data := struct {
-				Description string
-				Key         string
-				Name        string
-			}{
-				Description: "Mining as a Service",
-				Key:         os.Getenv("STRIPE_PUBLISHABLE_KEY"),
-				Name:        "Space",
-			}
-			log.Println("Data", data)
-			err = t.Execute(w, data)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-		case "POST":
-			log.Println("Request", r)
-			publicKeyFormat := r.PostFormValue("publicKeyFormat")
-			log.Println("PublicKeyFormat", publicKeyFormat)
-			publicKeyString := r.PostFormValue("publicKey")
-			log.Println("PublicKey", publicKeyString)
-			stripeEmail := r.PostFormValue("stripeEmail")
-			log.Println("Email", stripeEmail)
-			// stripeBillingName := r.PostFormValue("stripeBillingName")
-			// stripeBillingAddressLine1 := r.PostFormValue("stripeBillingAddressLine1")
-			// stripeBillingAddressCity := r.PostFormValue("stripeBillingAddressCity")
-			// stripeBillingAddressZip := r.PostFormValue("stripeBillingAddressZip")
-			// stripeBillingAddressCountry := r.PostFormValue("stripeBillingAddressCountry")
-			// stripeBillingAddressCountryCode := r.PostFormValue("stripeBillingAddressCountryCode")
-			// stripeBillingAddressState := r.PostFormValue("stripeBillingAddressState")
-			stripeToken := r.PostFormValue("stripeToken")
-			log.Println("Token", stripeToken)
-			// stripeTokenType := r.PostFormValue("stripeTokenType")
+		log.Println("Data", data)
+		err = t.Execute(w, data)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	case "POST":
+		r.ParseForm()
+		a := r.Form["alias"]
+		stripeEmail := r.Form["stripeEmail"]
+		// stripeBillingName := r.Form["stripeBillingName"]
+		// stripeBillingAddressLine1 := r.Form["stripeBillingAddressLine1"]
+		// stripeBillingAddressCity := r.Form["stripeBillingAddressCity"]
+		// stripeBillingAddressZip := r.Form["stripeBillingAddressZip"]
+		// stripeBillingAddressCountry := r.Form["stripeBillingAddressCountry"]
+		// stripeBillingAddressCountryCode := r.Form["stripeBillingAddressCountryCode"]
+		// stripeBillingAddressState := r.Form["stripeBillingAddressState"]
+		stripeToken := r.Form["stripeToken"]
+		// stripeTokenType := r.Form["stripeTokenType"]
 
-			stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
-
-			// Create new Stripe customer
-			customerParams := &stripe.CustomerParams{
-				Description: stripe.String("Space Customer"),
-				Email:       stripe.String(stripeEmail),
-			}
-			if err := customerParams.SetSource(stripeToken); err != nil {
-				log.Println(err)
-				return
-			}
-			cus, err := customer.New(customerParams)
+		if len(a) > 0 && len(stripeEmail) > 0 && len(stripeToken) > 0 {
+			node, err := bcgo.GetNode()
 			if err != nil {
 				log.Println(err)
 				return
 			}
+
+			aliases, err := aliasgo.OpenAliasChannel()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			// Get rsa.PublicKey for Alias
+			publicKey, err := aliasgo.GetPublicKey(aliases, a[0])
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			// Create list of access (user + server)
+			acl := map[string]*rsa.PublicKey{
+				a[0]:       publicKey,
+				node.Alias: &node.Key.PublicKey,
+			}
+			log.Println("Access", acl)
+
+			stripeCustomer, bcCustomer, err := financego.NewCustomer(a[0], stripeEmail[0], stripeToken[0], "Aletheia Ware LLC Mining Service Customer")
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			log.Println("StripeCustomer", stripeCustomer)
+			log.Println("BcCustomer", bcCustomer)
+			customerData, err := proto.Marshal(bcCustomer)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			customers, err := financego.OpenCustomerChannel()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			customerReference, err := Mine(node, customers, acl, customerData)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			log.Println("CustomerReference", customerReference)
 
 			productId := os.Getenv("STRIPE_PRODUCT_ID")
 			planId := os.Getenv("STRIPE_PLAN_ID")
 
-			// Create new Stripe subscription
-			subscriptionParams := &stripe.SubscriptionParams{
-				Customer: stripe.String(cus.ID),
-				Items: []*stripe.SubscriptionItemsParams{
-					{
-						Plan: stripe.String(planId),
-					},
-				},
+			stripeSubscription, bcSubscription, err := financego.NewSubscription(a[0], stripeCustomer.ID, "", productId, planId)
+			if err != nil {
+				log.Println(err)
+				return
 			}
-			sub, err := subscription.New(subscriptionParams)
+			log.Println("StripeSubscription", stripeSubscription)
+			log.Println("BcSubscription", bcSubscription)
+
+			subscriptionData, err := proto.Marshal(bcSubscription)
 			if err != nil {
 				log.Println(err)
 				return
 			}
 
-			publicKeyBytes, err := base64.RawURLEncoding.DecodeString(publicKeyString)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			publicKeyHash := bcutils.Hash(publicKeyBytes)
-
-			// Create registration
-			registration := &space.Registration{
-				PublicKey:      publicKeyHash,
-				CustomerId:     cus.ID,
-				PaymentId:      stripeToken,
-				ProductId:      productId,
-				PlanId:         planId,
-				SubscriptionId: sub.ID,
-			}
-			log.Println("Registration", registration)
-			data, err := proto.Marshal(registration)
+			subscriptions, err := financego.OpenSubscriptionChannel()
 			if err != nil {
 				log.Println(err)
 				return
 			}
 
-			// Decode public key string to rsa.PublicKey
-			pub, err := bcutils.RSAPublicKeyFromBytes(publicKeyBytes)
+			subscriptionReference, err := Mine(node, subscriptions, acl, subscriptionData)
 			if err != nil {
 				log.Println(err)
 				return
 			}
-
-			// Create list of recipients (user + server)
-			recipients := [2]*rsa.PublicKey{pub, &Node.Key.PublicKey}
-			log.Println("Recipients", recipients)
-
-			// Create message from server to recipients
-			message, err := bc.CreateMessage(Node.Key, recipients[:], nil, data)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			log.Println("Message", message)
-
-			data, err = proto.Marshal(message)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			entries := [1]*bc.BlockEntry{
-				&bc.BlockEntry{
-					MessageHash: bcutils.Hash(data),
-					Message:     message,
-				},
-			}
-
-			// Mine message into blockchain
-			hash, block, err := Node.Mine(Channels[space.SPACE_REGISTRATION], entries[:])
-			if err != nil {
-				log.Println(err)
-				return
-			}
-			log.Println("Hash", hash)
-			log.Println("Block", block)
+			log.Println("SubscriptionReference", subscriptionReference)
 
 			http.Redirect(w, r, "/success.html", http.StatusFound)
-		default:
-			log.Println("Unsupported method", r.Method)
 		}
 	default:
-		http.ServeFile(w, r, path.Join("static", r.URL.Path))
+		log.Println("Unsupported method", r.Method)
 	}
 }
 
-func handleBlock(conn net.Conn) {
+func HandleUpload(conn net.Conn) {
 	defer conn.Close()
-	log.Println("handleBlock:22222")
-	request, err := bc.ReadReference(conn)
+	reader := bufio.NewReader(conn)
+	writer := bufio.NewWriter(conn)
+	request, err := spacego.ReadStorageRequest(reader)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	log.Println("Reference", request)
-	channel := request.ChannelName
-	c, err := GetChannel(channel)
+
+	timestamp := time.Now().Unix()
+
+	size := proto.Size(request)
+	log.Println("StorageRequest", size, request.Alias, request.CustomerId, request.PaymentId)
+
+	node, err := bcgo.GetNode()
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	hash := request.BlockHash
-	if hash != nil && len(hash) > 0 {
-		// Read from cache
-		block, err := bc.ReadBlockFile(c.Cache, hash)
+
+	aliases, err := aliasgo.OpenAliasChannel()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	// Get rsa.PublicKey for Alias
+	publicKey, err := aliasgo.GetPublicKey(aliases, request.Alias)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	if len(request.CustomerId) > 0 {
+		// TODO check public key matches subscribed customer
+		// TODO bill customer
+		subscriptions, err := financego.OpenSubscriptionChannel()
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		// Write to connection
-		if err := bc.WriteBlock(conn, block); err != nil {
+		subscription, err := financego.GetSubscriptionSync(subscriptions, node.Alias, node.Key, request.Alias)
+		if err != nil {
 			log.Println(err)
 			return
 		}
-	} else {
-		hash := request.MessageHash
-		if hash != nil && len(hash) > 0 {
-			// Search through chain until message hash is found, and return the containing block
-			b := c.Head
-			for b != nil {
-				for _, e := range b.Entry {
-					if bytes.Equal(e.MessageHash, hash) {
-						log.Println("Found message, writing block")
-						// Write to connection
-						if err := bc.WriteBlock(conn, b); err != nil {
-							log.Println(err)
-						}
-						return
-					}
-				}
-				h := b.Previous
-				if h != nil && len(h) > 0 {
-					b, err = bc.ReadBlockFile(c.Cache, h)
-					if err != nil {
-						log.Println(err)
-						return
-					}
-				} else {
-					b = nil
-				}
-			}
-		} else {
-			log.Println("Missing block hash and message hash")
+		if subscription.CustomerId != request.CustomerId {
+			log.Println("Difference customer ID")
 			return
 		}
-	}
-}
-
-func handleHead(conn net.Conn) {
-	defer conn.Close()
-	log.Println("handleHead:22232")
-	request, err := bc.ReadReference(conn)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	log.Println("Reference", request)
-	channel := request.ChannelName
-	c, err := GetChannel(channel)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	reference, err := bc.ReadHeadFile(c.Cache, channel)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	if err := bc.WriteReference(conn, reference); err != nil {
-		log.Println(err)
-		return
-	}
-}
-
-func handleKeys(conn net.Conn) {
-	defer conn.Close()
-	log.Println("handleKeys:22322")
-	log.Println("Keys Request Handler not yet implemented", conn)
-}
-
-func handleStatus(conn net.Conn) {
-	defer conn.Close()
-	log.Println("handleStatus:23222")
-	log.Println("Status Request Handler not yet implemented", conn)
-}
-
-func handleWrite(conn net.Conn) {
-	defer conn.Close()
-	log.Println("handleWrite:23232")
-	request, err := space.ReadStorageRequest(conn)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	// Decode public key string to rsa.PublicKey
-	publicKey, err := bcutils.RSAPublicKeyFromBytes(request.PublicKey)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	publicKeyHash := bcutils.Hash(request.PublicKey)
-	publicKeyHashString := base64.RawURLEncoding.EncodeToString(publicKeyHash)
-	log.Println("StorageRequest", proto.Size(request), publicKeyHashString, request.CustomerId, request.PaymentId)
-	if len(request.CustomerId) > 0 {
-		// TODO check public key matches registered customer
-		// TODO bill customer
-	} else {
-		if len(request.PaymentId) > 0 {
-			// TODO bill payment token
-		} else {
-			log.Println("Missing payment information")
-			// TODO if the user wants to register, POST to :443/register with publicKey, and stripe info.
-			// If response is success, await new head of Space Registration channel, and decrypt to get customer id.
+		stripeUsageRecord, bcUsageRecord, err := financego.NewUsageRecord(request.Alias, subscription.SubscriptionItemId, int64(timestamp), int64(size))
+		if err != nil {
+			log.Println(err)
 			return
 		}
+		log.Println("UsageRecord", stripeUsageRecord)
+		log.Println("UsageRecord", bcUsageRecord)
+		// TODO Mine bcUsageRecord into UsageChannel
+	} else if len(request.PaymentId) > 0 {
+		stripeCharge, bcCharge, err := financego.NewCharge(request.Alias, request.PaymentId, int64(size), fmt.Sprintf("Aletheia Ware LLC Mining Charge %d at %d", size, timestamp))
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		log.Println("Charge", stripeCharge)
+		log.Println("Charge", bcCharge)
+		// TODO Mine bcCharge into ChargeChannel
+	} else {
+		log.Println("Missing payment information")
+		// TODO if the user wants to subscribe, POST to :443/subscription with publicKey, and stripe info.
+		// If response is success, await new head of Space Registration channel, and decrypt to get customer id.
+		return
 	}
 
-	response := &space.StorageResponse{}
+	response := &spacego.StorageResponse{}
 
 	// Create an array to hold at most two references (file, preview)
-	references := make([]*bc.Reference, 0, 2)
+	references := make([]*bcgo.Reference, 0, 2)
 
-	fileChannel := &bc.Channel{
-		Name:      space.SPACE_FILE_PREFIX + publicKeyHashString,
-		Threshold: bc.THRESHOLD_STANDARD,
-		Cache:     Cache,
+	files, err := spacego.OpenFileChannel(request.Alias)
+	if err != nil {
+		log.Println(err)
+		return
 	}
-	fileChannel.LoadHead()
-	Channels[fileChannel.Name] = fileChannel
-	fileReference, err := Mine(fileChannel, publicKey, request.File, nil)
+
+	fileReference, err := MineBundle(node, files, request.Alias, publicKey, request.File, nil)
 	if err != nil {
 		log.Println(err)
 		return
@@ -457,14 +430,13 @@ func handleWrite(conn net.Conn) {
 	references = append(references, response.File)
 
 	if request.Preview != nil {
-		previewChannel := &bc.Channel{
-			Name:      space.SPACE_PREVIEW_PREFIX + publicKeyHashString,
-			Threshold: bc.THRESHOLD_STANDARD,
-			Cache:     Cache,
+		/* TODO
+		previews, err := spacego.OpenPreviewChannel(request.Alias)
+		if err != nil {
+			log.Println(err)
+			return
 		}
-		previewChannel.LoadHead()
-		Channels[previewChannel.Name] = previewChannel
-		previewReference, err := Mine(previewChannel, publicKey, request.Preview, nil)
+		previewReference, err := MineBundle(node, previews, request.Alias, publicKey, request.Preview, nil)
 		if err != nil {
 			log.Println(err)
 			return
@@ -473,16 +445,15 @@ func handleWrite(conn net.Conn) {
 		response.Preview = previewReference
 		// Add previewReference to list of references
 		references = append(references, response.Preview)
+		*/
 	}
 
-	metaChannel := &bc.Channel{
-		Name:      space.SPACE_META_PREFIX + publicKeyHashString,
-		Threshold: bc.THRESHOLD_STANDARD,
-		Cache:     Cache,
+	metas, err := spacego.OpenMetaChannel(request.Alias)
+	if err != nil {
+		log.Println(err)
+		return
 	}
-	metaChannel.LoadHead()
-	Channels[metaChannel.Name] = metaChannel
-	metaReference, err := Mine(metaChannel, publicKey, request.Meta, references)
+	metaReference, err := MineBundle(node, metas, request.Alias, publicKey, request.Meta, references)
 	if err != nil {
 		log.Println(err)
 		return
@@ -491,87 +462,106 @@ func handleWrite(conn net.Conn) {
 
 	// Reply with storage response
 	log.Println("StorageResponse", response)
-	if err := space.WriteStorageResponse(conn, response); err != nil {
+	if err := spacego.WriteStorageResponse(writer, response); err != nil {
 		log.Println(err)
 		return
 	}
 }
 
-func Mine(channel *bc.Channel, publicKey *rsa.PublicKey, bundle *space.StorageRequest_Bundle, references []*bc.Reference) (*bc.Reference, error) {
-	// TODO check signature
-
-	publicKeyBytes, err := bcutils.RSAPublicKeyToBytes(publicKey)
+func Mine(node *bcgo.Node, channel *bcgo.Channel, acl map[string]*rsa.PublicKey, data []byte) (*bcgo.Reference, error) {
+	// Create record from server to acl
+	record, err := bcgo.CreateRecord(node.Alias, node.Key, acl, nil, data)
 	if err != nil {
 		return nil, err
 	}
-	publicKeyHash := bcutils.Hash(publicKeyBytes)
 
-	timestamp := uint64(time.Now().UnixNano())
+	log.Println("Record", record)
 
-	recipients := [1]*bc.Message_Access{
-		&bc.Message_Access{
-			PublicKeyHash: publicKeyHash,
-			SecretKey:     bundle.Key,
+	data, err = proto.Marshal(record)
+	if err != nil {
+		return nil, err
+	}
+
+	entries := [1]*bcgo.BlockEntry{
+		&bcgo.BlockEntry{
+			RecordHash: bcgo.Hash(data),
+			Record:     record,
 		},
 	}
 
-	// Create message
-	message := &bc.Message{
-		Timestamp:     timestamp,
-		SenderKeyHash: publicKeyHash,
-		Recipient:     recipients[:],
-		Payload:       bundle.Payload,
-		Signature:     bundle.Signature,
-		Reference:     references,
+	// Mine record into blockchain
+	hash, block, err := node.Mine(channel, entries[:])
+	if err != nil {
+		return nil, err
+	}
+	node.Multicast(channel, hash, block)
+	return &bcgo.Reference{
+		Timestamp:   block.Timestamp,
+		ChannelName: channel.Name,
+		BlockHash:   hash,
+	}, nil
+}
+
+func MineBundle(node *bcgo.Node, channel *bcgo.Channel, alias string, publicKey *rsa.PublicKey, bundle *spacego.StorageRequest_Bundle, references []*bcgo.Reference) (*bcgo.Reference, error) {
+	log.Println("Mining", channel.Name)
+	if err := bcgo.VerifySignature(publicKey, bcgo.Hash(bundle.Payload), bundle.Signature, bundle.SignatureAlgorithm); err != nil {
+		log.Println("Signature Verification Failed", err)
+		return nil, err
+	}
+
+	timestamp := uint64(time.Now().UnixNano())
+
+	recipients := [1]*bcgo.Record_Access{
+		&bcgo.Record_Access{
+			Alias:               alias,
+			SecretKey:           bundle.Key,
+			EncryptionAlgorithm: bundle.KeyEncryptionAlgorithm,
+		},
+	}
+
+	// Create record
+	record := &bcgo.Record{
+		Timestamp:            timestamp,
+		Creator:              alias,
+		Access:               recipients[:],
+		Payload:              bundle.Payload,
+		CompressionAlgorithm: bundle.CompressionAlgorithm,
+		EncryptionAlgorithm:  bundle.EncryptionAlgorithm,
+		Signature:            bundle.Signature,
+		SignatureAlgorithm:   bundle.SignatureAlgorithm,
+		Reference:            references,
 	}
 
 	// Marshal into byte array
-	data, err := proto.Marshal(message)
+	data, err := proto.Marshal(record)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get message hash
-	hash := bcutils.Hash(data)
+	// Get record hash
+	hash := bcgo.Hash(data)
 
-	// Create entry array containing hash and message
-	entries := [1]*bc.BlockEntry{
-		&bc.BlockEntry{
-			MessageHash: hash,
-			Message:     message,
+	// Create entry array containing hash and record
+	entries := [1]*bcgo.BlockEntry{
+		&bcgo.BlockEntry{
+			RecordHash: hash,
+			Record:     record,
 		},
 	}
 
 	// Mine channel in goroutine
 	go func() {
-		_, _, err := Node.Mine(channel, entries[:])
+		_, _, err := node.Mine(channel, entries[:])
 		if err != nil {
 			log.Println(err)
 			return
 		}
 	}()
 
-	// Return reference to message
-	return &bc.Reference{
+	// Return reference to record
+	return &bcgo.Reference{
 		Timestamp:   timestamp,
 		ChannelName: channel.Name,
-		MessageHash: hash,
+		RecordHash:  hash,
 	}, nil
-}
-
-func GetChannel(name string) (*bc.Channel, error) {
-	if strings.HasPrefix(name, space.SPACE_PREFIX) {
-		channel := Channels[name]
-		if channel == nil {
-			channel = &bc.Channel{
-				Name:      name,
-				Threshold: bc.THRESHOLD_STANDARD,
-				Cache:     Cache,
-			}
-			channel.LoadHead()
-			Channels[name] = channel
-		}
-		return channel, nil
-	}
-	return nil, errors.New("Unknown channel: " + name)
 }
