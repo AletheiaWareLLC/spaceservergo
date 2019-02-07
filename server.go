@@ -80,6 +80,7 @@ func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println("Event", event)
+	w.WriteHeader(http.StatusOK)
 }
 
 func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
@@ -185,7 +186,7 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			customerReference, err := Mine(node, customers, acl, customerData)
+			customerReference, err := node.Mine(customers, acl, customerData)
 			if err != nil {
 				log.Println(err)
 				return
@@ -215,7 +216,7 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			subscriptionReference, err := Mine(node, subscriptions, acl, subscriptionData)
+			subscriptionReference, err := node.Mine(subscriptions, acl, subscriptionData)
 			if err != nil {
 				log.Println(err)
 				return
@@ -315,7 +316,7 @@ func HandleUpload(conn net.Conn) {
 		return
 	}
 
-	fileReference, err := MineBundle(node, files, request.Alias, publicKey, request.File, nil)
+	fileReference, err := spacego.MineBundle(node, files, request.Alias, publicKey, request.File, nil)
 	if err != nil {
 		log.Println(err)
 		return
@@ -332,7 +333,7 @@ func HandleUpload(conn net.Conn) {
 			log.Println(err)
 			return
 		}
-		previewReference, err := MineBundle(node, previews, request.Alias, publicKey, request.Preview, nil)
+		previewReference, err := spacego.MineBundle(node, previews, request.Alias, publicKey, request.Preview, nil)
 		if err != nil {
 			log.Println(err)
 			return
@@ -349,7 +350,7 @@ func HandleUpload(conn net.Conn) {
 		log.Println(err)
 		return
 	}
-	metaReference, err := MineBundle(node, metas, request.Alias, publicKey, request.Meta, references)
+	metaReference, err := spacego.MineBundle(node, metas, request.Alias, publicKey, request.Meta, references)
 	if err != nil {
 		log.Println(err)
 		return
@@ -362,102 +363,4 @@ func HandleUpload(conn net.Conn) {
 		log.Println(err)
 		return
 	}
-}
-
-func Mine(node *bcgo.Node, channel *bcgo.Channel, acl map[string]*rsa.PublicKey, data []byte) (*bcgo.Reference, error) {
-	// Create record from server to acl
-	record, err := bcgo.CreateRecord(node.Alias, node.Key, acl, nil, data)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Println("Record", record)
-
-	data, err = proto.Marshal(record)
-	if err != nil {
-		return nil, err
-	}
-
-	entries := [1]*bcgo.BlockEntry{
-		&bcgo.BlockEntry{
-			RecordHash: bcgo.Hash(data),
-			Record:     record,
-		},
-	}
-
-	// Mine record into blockchain
-	hash, block, err := node.Mine(channel, entries[:])
-	if err != nil {
-		return nil, err
-	}
-	node.Multicast(channel, hash, block)
-	return &bcgo.Reference{
-		Timestamp:   block.Timestamp,
-		ChannelName: channel.Name,
-		BlockHash:   hash,
-	}, nil
-}
-
-func MineBundle(node *bcgo.Node, channel *bcgo.Channel, alias string, publicKey *rsa.PublicKey, bundle *spacego.StorageRequest_Bundle, references []*bcgo.Reference) (*bcgo.Reference, error) {
-	log.Println("Mining", channel.Name)
-	if err := bcgo.VerifySignature(publicKey, bcgo.Hash(bundle.Payload), bundle.Signature, bundle.SignatureAlgorithm); err != nil {
-		log.Println("Signature Verification Failed", err)
-		return nil, err
-	}
-
-	timestamp := uint64(time.Now().UnixNano())
-
-	recipients := [1]*bcgo.Record_Access{
-		&bcgo.Record_Access{
-			Alias:               alias,
-			SecretKey:           bundle.Key,
-			EncryptionAlgorithm: bundle.KeyEncryptionAlgorithm,
-		},
-	}
-
-	// Create record
-	record := &bcgo.Record{
-		Timestamp:            timestamp,
-		Creator:              alias,
-		Access:               recipients[:],
-		Payload:              bundle.Payload,
-		CompressionAlgorithm: bundle.CompressionAlgorithm,
-		EncryptionAlgorithm:  bundle.EncryptionAlgorithm,
-		Signature:            bundle.Signature,
-		SignatureAlgorithm:   bundle.SignatureAlgorithm,
-		Reference:            references,
-	}
-
-	// Marshal into byte array
-	data, err := proto.Marshal(record)
-	if err != nil {
-		return nil, err
-	}
-
-	// Get record hash
-	hash := bcgo.Hash(data)
-
-	// Create entry array containing hash and record
-	entries := [1]*bcgo.BlockEntry{
-		&bcgo.BlockEntry{
-			RecordHash: hash,
-			Record:     record,
-		},
-	}
-
-	// Mine channel in goroutine
-	go func() {
-		_, _, err := node.Mine(channel, entries[:])
-		if err != nil {
-			log.Println(err)
-			return
-		}
-	}()
-
-	// Return reference to record
-	return &bcgo.Reference{
-		Timestamp:   timestamp,
-		ChannelName: channel.Name,
-		RecordHash:  hash,
-	}, nil
 }
