@@ -46,23 +46,20 @@ func main() {
 	go bcnetgo.Bind(spacego.PORT_UPLOAD, HandleUpload)
 
 	// Serve Web Requests
-	http.HandleFunc("/", bcnetgo.HandleStatic)
-	http.HandleFunc("/status", bcnetgo.HandleStatus)
-	http.HandleFunc("/stripe-webhook", HandleStripeWebhook)
-	http.HandleFunc("/subscription", HandleSubscribe)
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", bcnetgo.HandleStatic)
+	mux.HandleFunc("/stripe-webhook", HandleStripeWebhook)
+	mux.HandleFunc("/subscription", HandleSubscribe)
 	store, err := bcnetgo.GetSecurityStore()
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	// Serve HTTPS HTML Requests
-	go log.Fatal(http.ListenAndServeTLS(":443", path.Join(store, "fullchain.pem"), path.Join(store, "privkey.pem"), nil))
-	// Redirect HTTP HTML Requests to HTTPS
-	log.Fatal(http.ListenAndServe(":80", http.HandlerFunc(bcnetgo.HTTPSRedirect)))
-	/*
-		// Serve HTTP HTML Requests
-		log.Fatal(http.ListenAndServe(":80", nil))
-	*/
+	// Serve HTTPS Requests
+	log.Fatal(http.ListenAndServeTLS(":443", path.Join(store, "fullchain.pem"), path.Join(store, "privkey.pem"), mux))
+
+	// TODO Redirect HTTP Requests to HTTPS
+	// log.Fatal(http.ListenAndServe(":80", http.HandlerFunc(bcnetgo.HTTPSRedirect)))
 }
 
 func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
