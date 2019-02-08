@@ -23,8 +23,8 @@
                 </ul>
             </li>
             <li>
-                <p>Generate your key pair consisting of a public key (which will be registered with your account) and a private key (which does not leave your possession).</p>
-                <pre><code>$> ./space</code></pre>
+                <p>Use <a href="https://bc.aletheiaware.com">BC</a> to generate your key pair consisting of a public key (which will be registered with your account) and a private key (which does not leave your possession).</p>
+                <pre><code>$> ./bc alias</code></pre>
                 <samp>
                     Creating keystore under /Users/<strong>username</strong>/bc
                     <br/>
@@ -45,29 +45,82 @@
                     <br/>
                     -----END RSA PUBLIC KEY-----
                     <br>
-                    <br/>
-                    Register your public key and a chosen alias using https://space.aletheiaware.com/alias
-                    <br/>
-                    <br>
-                    Save battery by mining remotely, register your alias and billing information using https://space.aletheiaware.com/subscription
-                    <br/>
                 </samp>
+
+                <p>Register your public key and a chosen alias at https://bc.aletheiaware.com/alias</p>
             </li>
             <li>
-                <p>Follow the URL given by Space which will return you to this website to complete your registration and provide the following information;</p>
-                <ul>
-                    <li>Alias - what you would like us to call you.</li>
-                    <li>Email - how you would like us to contact you.</li>
-                    <li>Billing Info - how you would like to pay (this information is handled and stored by <a href="stripe.com">Stripe</a>);
-                        <ul>
-                            <li>Card Holder Name</li>
-                            <li>Card Number</li>
-                            <li>Card Expiry Date</li>
-                            <li>Card Verification Code (CVC)</li>
-                            <li>Billing Address</li>
-                        </ul>
-                    </li>
-                </ul>
+                <p>Save battery by mining remotely, register your alias and billing information using;
+                    <pre><code>$> ./space subscription</code></pre>
+                or click <a href="https://space.aletheiaware.com/subscription">Subscription</a> and provide the following information;
+                    <ul>
+                        <li>Alias - what you would like us to call you.</li>
+                        <li>Email - how you would like us to contact you.</li>
+                        <li>Billing Info - how you would like to pay (this information is handled and stored by <a href="stripe.com">Stripe</a>);
+                            <ul>
+                                <li>Card Holder Name</li>
+                                <li>Card Number</li>
+                                <li>Card Expiry Date</li>
+                                <li>Card Verification Code (CVC)</li>
+                                <li>Billing Address</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </p>
+            </li>
+            <li>
+                <p>Sample usage:
+                    <ul>
+                        <li>
+                            <pre><code>$> ./space foo text/plain</code></pre>
+                            <p>Adds a new file with the given name, mime type, and contents read from stdin.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space foo text/plain foobar.txt</code></pre>
+                            <p>Adds a new file with the given name, mime type, and contents read from file.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space list </code></pre>
+                            <p>Displays a list of files in reverse-chronological order.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space show [hash]</code></pre>
+                            <p>Displays the metadata of the file with the given hash.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space upload foo text/plain</code></pre>
+                            <p>Uploads a new file with the given name, mime type, and contents read from stdin to Aletheia Ware's Mining-as-a-Service Platform, saving your device battery.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space upload foo text/plain foobar.txt</code></pre>
+                            <p>Uploads a new file with the given name, mime type, and contents read from file to Aletheia Ware's Mining-as-a-Service Platform, saving your device battery.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space showall text/plain</code></pre>
+                            <p>Shows all files with the given mime type.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space preview [hash]</code></pre>
+                            <p>Displays the preview (if any) of the file with the given hash.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space download [hash]</code></pre>
+                            <p>Downloads the data of the file with the given hash to stdout.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space download [hash] file</code></pre>
+                            <p>Downloads the data of the file with the given hash to the given file.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space customer </code></pre>
+                            <p>Displays Stripe customer information.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space subscription </code></pre>
+                            <p>Displays Stripe subscription information.</p>
+                        </li>
+                    </ul>
+                </p>
             </li>
         </ol>
     </body>
