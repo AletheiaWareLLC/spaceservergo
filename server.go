@@ -29,7 +29,6 @@ import (
 	"html/template"
 	"io/ioutil"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"path"
@@ -42,13 +41,19 @@ func main() {
 	go bcnetgo.Bind(bcgo.PORT_BLOCK, bcnetgo.HandleBlock)
 	// Serve Head Requests
 	go bcnetgo.Bind(bcgo.PORT_HEAD, bcnetgo.HandleHead)
-	// Serve Upload Requests
-	go bcnetgo.Bind(spacego.PORT_UPLOAD, HandleUpload)
+	// Serve Block Updates
+	go bcnetgo.Bind(bcgo.PORT_MULTICAST, bcnetgo.HandleUpdate)
 
 	// Serve Web Requests
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", bcnetgo.HandleStatic)
+	mux.HandleFunc("/mining/file", PrefixAliasMiningHandler(spacego.SPACE_PREFIX_FILE))
+	mux.HandleFunc("/mining/meta", PrefixAliasMiningHandler(spacego.SPACE_PREFIX_META))
+	mux.HandleFunc("/mining/preview", PrefixAliasMiningHandler(spacego.SPACE_PREFIX_PREVIEW))
+	mux.HandleFunc("/mining/share", PrefixAliasMiningHandler(spacego.SPACE_PREFIX_SHARE))
+	mux.HandleFunc("/mining/tag", PrefixAliasMiningHandler(spacego.SPACE_PREFIX_TAG))
 	mux.HandleFunc("/stripe-webhook", HandleStripeWebhook)
+	// TODO mux.HandleFunc("/registration", HandleRegister)
 	mux.HandleFunc("/subscription", HandleSubscribe)
 	store, err := bcnetgo.GetSecurityStore()
 	if err != nil {
@@ -80,6 +85,7 @@ func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// TODO split into HandleRegister for creating Customer, and HandleSubscribe for creating Subscription
 func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.RemoteAddr, r.Proto, r.Method, r.Host, r.URL.Path)
 	switch r.Method {
@@ -107,7 +113,7 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 			Alias       string
 			PublicKey   string
 		}{
-			Description: "Mining Service",
+			Description: "Remote Mining Service",
 			Key:         os.Getenv("STRIPE_PUBLISHABLE_KEY"),
 			Name:        "Aletheia Ware LLC",
 			Alias:       a,
@@ -183,7 +189,7 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			customerReference, err := node.Mine(customers, acl, customerData)
+			customerReference, err := node.Mine(customers, acl, nil, customerData)
 			if err != nil {
 				log.Println(err)
 				return
@@ -213,7 +219,9 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			subscriptionReference, err := node.Mine(subscriptions, acl, subscriptionData)
+			references := []*bcgo.Reference{customerReference}
+
+			subscriptionReference, err := node.Mine(subscriptions, acl, references, subscriptionData)
 			if err != nil {
 				log.Println(err)
 				return
@@ -227,137 +235,141 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func HandleUpload(conn net.Conn) {
-	defer conn.Close()
-	reader := bufio.NewReader(conn)
-	writer := bufio.NewWriter(conn)
-	request, err := spacego.ReadStorageRequest(reader)
-	if err != nil {
-		log.Println(err)
-		return
-	}
+func PrefixAliasMiningHandler(prefix string) func(http.ResponseWriter, *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.RemoteAddr, r.Proto, r.Method, r.Host, r.URL.Path)
+		switch r.Method {
+		case "POST":
+			request, err := bcgo.ReadRecord(bufio.NewReader(r.Body))
+			if err != nil {
+				log.Println(err)
+				return
+			}
 
-	timestamp := time.Now().Unix()
+			size := proto.Size(request)
+			log.Println("Record", size, request.Creator)
 
-	size := proto.Size(request)
-	log.Println("StorageRequest", size, request.Alias, request.CustomerId, request.PaymentId)
+			node, err := bcgo.GetNode()
+			if err != nil {
+				log.Println(err)
+				return
+			}
 
-	node, err := bcgo.GetNode()
-	if err != nil {
-		log.Println(err)
-		return
-	}
+			aliases, err := aliasgo.OpenAliasChannel()
+			if err != nil {
+				log.Println(err)
+				return
+			}
 
-	aliases, err := aliasgo.OpenAliasChannel()
-	if err != nil {
-		log.Println(err)
-		return
-	}
+			// Get rsa.PublicKey for Alias
+			publicKey, err := aliasgo.GetPublicKey(aliases, request.Creator)
+			if err != nil {
+				log.Println(err)
+				return
+			}
 
-	// Get rsa.PublicKey for Alias
-	publicKey, err := aliasgo.GetPublicKey(aliases, request.Alias)
-	if err != nil {
-		log.Println(err)
-		return
-	}
+			// Verify Signature
+			if err := bcgo.VerifySignature(publicKey, bcgo.Hash(request.Payload), request.Signature, request.SignatureAlgorithm); err != nil {
+				log.Println("Signature Verification Failed", err)
+				return
+			}
 
-	if len(request.CustomerId) > 0 {
-		// TODO check public key matches subscribed customer
-		// TODO bill customer
-		subscriptions, err := financego.OpenSubscriptionChannel()
-		if err != nil {
-			log.Println(err)
-			return
+			customers, err := financego.OpenCustomerChannel()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			// Get Customer for Alias
+			customer, err := financego.GetCustomerSync(customers, node.Alias, node.Key, request.Creator)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			subscriptions, err := financego.OpenSubscriptionChannel()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			// Get Subscription for Alias
+			subscription, err := financego.GetSubscriptionSync(subscriptions, node.Alias, node.Key, request.Creator)
+			if err != nil {
+				// Charge Customer
+				stripeCharge, bcCharge, err := financego.NewCustomerCharge(customer, int64(size), fmt.Sprintf("Aletheia Ware LLC Mining Charge %dbytes", size))
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				log.Println("Charge", stripeCharge)
+				log.Println("Charge", bcCharge)
+				// TODO Mine bcCharge into ChargeChannel
+			} else {
+				// Log Subscription Usage
+				if customer.CustomerId != subscription.CustomerId {
+					log.Println("Customer ID doesn't match Subscription Customer ID")
+					return
+				}
+				stripeUsageRecord, bcUsageRecord, err := financego.NewUsageRecord(request.Creator, subscription.SubscriptionItemId, time.Now().Unix(), int64(size))
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				log.Println("UsageRecord", stripeUsageRecord)
+				log.Println("UsageRecord", bcUsageRecord)
+				// TODO Mine bcUsageRecord into UsageChannel
+			}
+
+			// Open Channel
+			channel, err := bcgo.OpenChannel(prefix + request.Creator)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			// Marshal into byte array
+			data, err := proto.Marshal(request)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			// Get record hash
+			hash := bcgo.Hash(data)
+
+			// Create entry array containing hash and record
+			entries := [1]*bcgo.BlockEntry{
+				&bcgo.BlockEntry{
+					RecordHash: hash,
+					Record:     request,
+				},
+			}
+
+			// Mine channel in goroutine
+			go func(c *bcgo.Channel, es []*bcgo.BlockEntry) {
+				_, _, err := node.MineRecords(c, es)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+			}(channel, entries[:])
+
+			// Return reference to record
+			response := &bcgo.Reference{
+				Timestamp:   request.Timestamp,
+				ChannelName: channel.Name,
+				RecordHash:  hash,
+			}
+
+			// Reply with reference
+			log.Println("Reference", response)
+			if err := bcgo.WriteReference(bufio.NewWriter(w), response); err != nil {
+				log.Println(err)
+				return
+			}
+		default:
+			log.Println("Unsupported method", r.Method)
 		}
-		subscription, err := financego.GetSubscriptionSync(subscriptions, node.Alias, node.Key, request.Alias)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		if subscription.CustomerId != request.CustomerId {
-			log.Println("Difference customer ID")
-			return
-		}
-		stripeUsageRecord, bcUsageRecord, err := financego.NewUsageRecord(request.Alias, subscription.SubscriptionItemId, int64(timestamp), int64(size))
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		log.Println("UsageRecord", stripeUsageRecord)
-		log.Println("UsageRecord", bcUsageRecord)
-		// TODO Mine bcUsageRecord into UsageChannel
-	} else if len(request.PaymentId) > 0 {
-		stripeCharge, bcCharge, err := financego.NewCharge(request.Alias, request.PaymentId, int64(size), fmt.Sprintf("Aletheia Ware LLC Mining Charge %d at %d", size, timestamp))
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		log.Println("Charge", stripeCharge)
-		log.Println("Charge", bcCharge)
-		// TODO Mine bcCharge into ChargeChannel
-	} else {
-		log.Println("Missing payment information")
-		// TODO if the user wants to subscribe, POST to :443/subscription with publicKey, and stripe info.
-		// If response is success, await new head of Space Registration channel, and decrypt to get customer id.
-		return
-	}
-
-	response := &spacego.StorageResponse{}
-
-	// Create an array to hold at most two references (file, preview)
-	references := make([]*bcgo.Reference, 0, 2)
-
-	files, err := spacego.OpenFileChannel(request.Alias)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	fileReference, err := spacego.MineBundle(node, files, request.Alias, publicKey, request.File, nil)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	// Add fileReference to response
-	response.File = fileReference
-	// Add fileReference to list of references
-	references = append(references, response.File)
-
-	if request.Preview != nil {
-		/* TODO
-		previews, err := spacego.OpenPreviewChannel(request.Alias)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		previewReference, err := spacego.MineBundle(node, previews, request.Alias, publicKey, request.Preview, nil)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		// Add previewReference to response
-		response.Preview = previewReference
-		// Add previewReference to list of references
-		references = append(references, response.Preview)
-		*/
-	}
-
-	metas, err := spacego.OpenMetaChannel(request.Alias)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	metaReference, err := spacego.MineBundle(node, metas, request.Alias, publicKey, request.Meta, references)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	response.Meta = metaReference
-
-	// Reply with storage response
-	log.Println("StorageResponse", response)
-	if err := spacego.WriteStorageResponse(writer, response); err != nil {
-		log.Println(err)
-		return
 	}
 }

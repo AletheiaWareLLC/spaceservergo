@@ -14,17 +14,17 @@
             <li>
                 <p>Get Space for your device;</p>
                 <ul>
-                    <li>Android - <a href="https://play.google.com/store/apps/details?id=com.aletheiaware.space">Google Play Store</a> or <a download href="SpaceAndroid.apk">APK</a></li>
+                    <li>Android - <a href="https://play.google.com/store/apps/details?id=com.aletheiaware.space.android">Google Play Store</a> or <a download href="SpaceAndroid.apk">APK</a></li>
                     <li>iOS - coming soon!<!--<a download href="Space"></a>--></li>
                     <li>JVM - <a download href="SpaceJVM.jar">JAR</a></li>
-                    <li>Linux - ARM (<a download href="space-linux-arm">32</a>, <a download href="space-linux-arm64">64</a>) or Intel (<a download href="space-linux-386">32</a>, <a download href="space-linux-amd64">64</a>)</li>
-                    <li>Mac - ARM (<a download href="space-darwin-arm">32</a>, <a download href="space-darwin-arm64">64</a>) or Intel (<a download href="space-darwin-386">32</a>, <a download href="space-darwin-amd64">64</a>)</li>
-                    <li>Windows - ARM (<a download href="space-windows-arm">32</a>, <a download href="space-windows-arm64">64</a>) or Intel (<a download href="space-windows-386">32</a>, <a download href="space-windows-amd64">64</a>)</li>
+                    <li>Linux - ARM (<a download href="spaceclientgo-linux-arm5">v5</a>, <a download href="spaceclientgo-linux-arm6">v6</a>, <a download href="spaceclientgo-linux-arm7">v7</a>, <a download href="spaceclientgo-linux-arm8">v8</a>) or Intel/AMD (<a download href="spaceclientgo-linux-386">32</a>, <a download href="spaceclientgo-linux-amd64">64</a>)</li>
+                    <li>Mac - Intel/AMD (<a download href="spaceclientgo-darwin-386">32</a>, <a download href="spaceclientgo-darwin-amd64">64</a>)</li>
+                    <li>Windows - Intel/AMD (<a download href="spaceclientgo-windows-386">32</a>, <a download href="spaceclientgo-windows-amd64">64</a>)</li>
                 </ul>
             </li>
             <li>
-                <p>Use <a href="https://bc.aletheiaware.com">BC</a> to generate your key pair consisting of a public key (which will be registered with your account) and a private key (which does not leave your possession).</p>
-                <pre><code>$> ./bc alias</code></pre>
+                <p>Generate your key pair consisting of a public key (which will be registered with your account) and a private key (which does not leave your possession).</p>
+                <pre><code>$> ./space init</code></pre>
                 <samp>
                     Creating keystore under /Users/<strong>username</strong>/bc
                     <br/>
@@ -34,20 +34,15 @@
                     <br/>
                     Generating RSA 4096 Public/Private Key Pair
                     <br/>
-                    Successfully created keystore!
-                    <br/>
-                    <br/>
-                    -----BEGIN RSA PUBLIC KEY-----
+                    Successfully Created Key Pair
                     <br/>
                     ...
                     <br/>
                     ...
                     <br/>
-                    -----END RSA PUBLIC KEY-----
+                    Initialized as <strong>username</strong>
                     <br>
                 </samp>
-
-                <p>Register your public key and a chosen alias at https://bc.aletheiaware.com/alias</p>
             </li>
             <li>
                 <p>Save battery by mining remotely, register your alias and billing information using;
@@ -89,11 +84,11 @@
                         </li>
                         <li>
                             <pre><code>$> ./space upload foo text/plain</code></pre>
-                            <p>Uploads a new file with the given name, mime type, and contents read from stdin to Aletheia Ware's Mining-as-a-Service Platform, saving your device battery.</p>
+                            <p>Uploads a new file with the given name, mime type, and contents read from stdin to Aletheia Ware's Remote Mining Service, saving your device battery.</p>
                         </li>
                         <li>
                             <pre><code>$> ./space upload foo text/plain foobar.txt</code></pre>
-                            <p>Uploads a new file with the given name, mime type, and contents read from file to Aletheia Ware's Mining-as-a-Service Platform, saving your device battery.</p>
+                            <p>Uploads a new file with the given name, mime type, and contents read from file to Aletheia Ware's Remote Mining Service, saving your device battery.</p>
                         </li>
                         <li>
                             <pre><code>$> ./space showall text/plain</code></pre>
