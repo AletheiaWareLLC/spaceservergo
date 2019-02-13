@@ -12,17 +12,19 @@
         <p>Welcome to Space, please follow the steps below to get setup;</p>
         <ol>
             <li>
+                <h2>Download</h2>
                 <p>Get Space for your device;</p>
                 <ul>
                     <li>Android - <a href="https://play.google.com/store/apps/details?id=com.aletheiaware.space.android">Google Play Store</a> or <a download href="SpaceAndroid.apk">APK</a></li>
                     <li>iOS - coming soon!<!--<a download href="Space"></a>--></li>
                     <li>JVM - <a download href="SpaceJVM.jar">JAR</a></li>
-                    <li>Linux - ARM (<a download href="spaceclientgo-linux-arm5">v5</a>, <a download href="spaceclientgo-linux-arm6">v6</a>, <a download href="spaceclientgo-linux-arm7">v7</a>, <a download href="spaceclientgo-linux-arm8">v8</a>) or Intel/AMD (<a download href="spaceclientgo-linux-386">32</a>, <a download href="spaceclientgo-linux-amd64">64</a>)</li>
-                    <li>Mac - Intel/AMD (<a download href="spaceclientgo-darwin-386">32</a>, <a download href="spaceclientgo-darwin-amd64">64</a>)</li>
-                    <li>Windows - Intel/AMD (<a download href="spaceclientgo-windows-386">32</a>, <a download href="spaceclientgo-windows-amd64">64</a>)</li>
+                    <li>Linux - ARM (<a download="space" href="spaceclientgo-linux-arm5">v5</a>, <a download="space" href="spaceclientgo-linux-arm6">v6</a>, <a download="space" href="spaceclientgo-linux-arm7">v7</a>, <a download="space" href="spaceclientgo-linux-arm8">v8</a>) or Intel/AMD (<a download="space" href="spaceclientgo-linux-386">32</a>, <a download="space" href="spaceclientgo-linux-amd64">64</a>)</li>
+                    <li>Mac - Intel/AMD (<a download="space" href="spaceclientgo-darwin-386">32</a>, <a download="space" href="spaceclientgo-darwin-amd64">64</a>)</li>
+                    <li>Windows - Intel/AMD (<a download="space.exe" href="spaceclientgo-windows-386.exe">32</a>, <a download="space.exe" href="spaceclientgo-windows-amd64.exe">64</a>)</li>
                 </ul>
             </li>
             <li>
+                <h2>Initialize</h2>
                 <p>Generate your key pair consisting of a public key (which will be registered with your account) and a private key (which does not leave your possession).</p>
                 <pre><code>$> ./space init</code></pre>
                 <samp>
@@ -45,34 +47,36 @@
                 </samp>
             </li>
             <li>
-                <p>Save battery by mining remotely, register your alias and billing information using;
-                    <pre><code>$> ./space subscription</code></pre>
-                or click <a href="https://space.aletheiaware.com/subscription">Subscription</a> and provide the following information;
+                <h2>Sample Usage</h2>
+                <p>Environment
                     <ul>
-                        <li>Alias - what you would like us to call you.</li>
-                        <li>Email - how you would like us to contact you.</li>
-                        <li>Billing Info - how you would like to pay (this information is handled and stored by <a href="stripe.com">Stripe</a>);
-                            <ul>
-                                <li>Card Holder Name</li>
-                                <li>Card Number</li>
-                                <li>Card Expiry Date</li>
-                                <li>Card Verification Code (CVC)</li>
-                                <li>Billing Address</li>
-                            </ul>
+                        <li>
+                            <pre><code>$> ALIAS=alice ./space</code></pre>
+                            <p>Sets the alias for Space to load from the keystore.</p>
                         </li>
                     </ul>
                 </p>
-            </li>
-            <li>
-                <p>Sample usage:
+                <p>Commands
                     <ul>
                         <li>
-                            <pre><code>$> ./space foo text/plain</code></pre>
+                            <pre><code>$> ./space [name] text/plain</code></pre>
                             <p>Adds a new file with the given name, mime type, and contents read from stdin.</p>
                         </li>
                         <li>
-                            <pre><code>$> ./space foo text/plain foobar.txt</code></pre>
+                            <pre><code>$> ./space [name] text/plain foobar.txt</code></pre>
                             <p>Adds a new file with the given name, mime type, and contents read from file.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space get [hash]</code></pre>
+                            <p>Gets file with the given hash and writes the data to stdout.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space get [hash] file</code></pre>
+                            <p>Gets file with the given hash and writes the data to the given file.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space init </code></pre>
+                            <p>Initializes environment, generates keys, and registers alias.</p>
                         </li>
                         <li>
                             <pre><code>$> ./space list </code></pre>
@@ -83,28 +87,28 @@
                             <p>Displays the metadata of the file with the given hash.</p>
                         </li>
                         <li>
-                            <pre><code>$> ./space upload foo text/plain</code></pre>
-                            <p>Uploads a new file with the given name, mime type, and contents read from stdin to Aletheia Ware's Remote Mining Service, saving your device battery.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space upload foo text/plain foobar.txt</code></pre>
-                            <p>Uploads a new file with the given name, mime type, and contents read from file to Aletheia Ware's Remote Mining Service, saving your device battery.</p>
-                        </li>
-                        <li>
                             <pre><code>$> ./space showall text/plain</code></pre>
                             <p>Shows all files with the given mime type.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space tag [hash]</code></pre>
+                            <p>Displays the tags (if any) of the file with the given hash.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space tag [hash] foo bar</code></pre>
+                            <p>Adds the tags to the file with the given hash.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space search foo bar</code></pre>
+                            <p>Displays the metadata of all files which match the given tags.</p>
                         </li>
                         <li>
                             <pre><code>$> ./space preview [hash]</code></pre>
                             <p>Displays the preview (if any) of the file with the given hash.</p>
                         </li>
                         <li>
-                            <pre><code>$> ./space download [hash]</code></pre>
-                            <p>Downloads the data of the file with the given hash to stdout.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space download [hash] file</code></pre>
-                            <p>Downloads the data of the file with the given hash to the given file.</p>
+                            <pre><code>$> ./space share [hash] alice bob</code></pre>
+                            <p>Shares the file with the given hash with the given aliases.</p>
                         </li>
                         <li>
                             <pre><code>$> ./space customer </code></pre>
@@ -113,6 +117,34 @@
                         <li>
                             <pre><code>$> ./space subscription </code></pre>
                             <p>Displays Stripe subscription information.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space upload foo text/plain</code></pre>
+                            <p>Uploads a new file with the given name, mime type, and contents read from stdin to Aletheia Ware's Remote Mining Service, saving your device battery.</p>
+                        </li>
+                        <li>
+                            <pre><code>$> ./space upload foo text/plain foobar.txt</code></pre>
+                            <p>Uploads a new file with the given name, mime type, and contents read from file to Aletheia Ware's Remote Mining Service, saving your device battery.</p>
+                        </li>
+                    </ul>
+                </p>
+            </li>
+            <li>
+                <h2>Remote Mining Service</h2>
+                <p>Save battery by mining remotely, register your alias and billing information using;
+                    <pre><code>$> ./space subscription</code></pre>
+                or click <a href="https://space.aletheiaware.com/subscription">Subscription</a> and provide the following information;
+                    <ul>
+                        <li>Alias - registered to your public key and signed by your private key.</li>
+                        <li>Email - how you would like us to contact you.</li>
+                        <li>Billing Info - how you would like to pay (this information is handled and stored by <a href="stripe.com">Stripe</a>);
+                            <ul>
+                                <li>Card Holder Name</li>
+                                <li>Card Number</li>
+                                <li>Card Expiry Date</li>
+                                <li>Card Verification Code (CVC)</li>
+                                <li>Billing Address</li>
+                            </ul>
                         </li>
                     </ul>
                 </p>

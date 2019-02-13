@@ -47,6 +47,7 @@ func main() {
 	// Serve Web Requests
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", bcnetgo.HandleStatic)
+	mux.HandleFunc("/alias", bcnetgo.HandleAlias)
 	mux.HandleFunc("/mining/file", PrefixAliasMiningHandler(spacego.SPACE_PREFIX_FILE))
 	mux.HandleFunc("/mining/meta", PrefixAliasMiningHandler(spacego.SPACE_PREFIX_META))
 	mux.HandleFunc("/mining/preview", PrefixAliasMiningHandler(spacego.SPACE_PREFIX_PREVIEW))
