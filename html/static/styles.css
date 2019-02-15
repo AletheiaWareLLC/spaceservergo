@@ -1,0 +1,96 @@
+a {
+    color: grey;
+}
+a:hover {
+    color: lightgrey;
+}
+body {
+    background-color: black;
+    font-family: Helvetica, sans-serif;
+}
+h1 {
+    color: white;
+    font-size: 1.5em;
+    margin-top: 0.6em;
+    margin-bottom: 0.6em;
+    text-align: center;
+}
+h2 {
+    color: white;
+    font-size: 1.4em;
+    margin-top: 0.8em;
+    margin-bottom: 0.8em;
+    text-align: left;
+}
+h3 {
+    color: white;
+    font-size: 1.3em;
+    margin-top: 1em;
+    margin-bottom: 1em;
+    text-align: left;
+}
+h4 {
+    color: white;
+    font-size: 1.2em;
+    margin-top: 1.2em;
+    margin-bottom: 1.2em;
+    text-align: left;
+}
+h5 {
+    color: white;
+    font-size: 1.1em;
+    margin-top: 1.4em;
+    margin-bottom: 1.4em;
+    text-align: left;
+}
+h6 {
+    color: white;
+    font-size: 1em;
+    margin-top: 1.6em;
+    margin-bottom: 1.6em;
+    text-align: left;
+}
+p {
+    color: white;
+    text-align: justify;
+}
+p.note {
+    background-color: lightgrey;
+    border: 1px solid white;
+    border-radius: 10px;
+    padding: 5px;
+}
+p.subtitle {
+    text-align: center;
+}
+pre {
+    color: lightgrey;
+}
+samp {
+    color: lightgrey;
+}
+ul {
+    color: white;
+}
+.header {
+    border-bottom: 1px solid white;
+    overflow: hidden;
+    padding-bottom: 10px;
+}
+.header img {
+    display: block;
+    margin: auto;
+}
+.footer {
+    border-top: 1px solid white;
+    overflow: hidden;
+    padding-top: 10px;
+}
+.footer p {
+    text-align: center;
+}
+.content {
+    max-width: 960px;
+    margin: auto;
+    padding: 10px;
+}

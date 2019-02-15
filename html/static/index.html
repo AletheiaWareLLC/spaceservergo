@@ -4,28 +4,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <head>
-        <title>Space</title>
+        <link rel="stylesheet" href="styles.css">
+        <title>Space - Aletheia Ware</title>
     </head>
 
     <body>
-        <h1>Space</h1>
-        <p>Welcome to Space, please follow the steps below to get setup;</p>
-        <ol>
-            <li>
-                <h2>Download</h2>
+        <div class="content">
+            <div class="header">
+                <a href="https://aletheiaware.com/">
+                    <img src="logo.svg" />
+                </a>
+            </div>
+
+            <h1>Need Space?</h1>
+            <p class="subtitle">End-to-End Encrypted, Blockchain-Backed, Storage.</p>
+
+            <img src="space.svg" width="100%" />
+
+            <p>In this digital age, more so than ever; knowledge is power, information is foresight, and data is money. You may not recognize the true value of your personal data until someone else has sold it - that free service you signed up for wasn't free at all. A company needs to earn to stay in business, would you rather pay with currency or personal data?</p>
+
+            <p>When deciding how to store your work, dog pictures, cat videos, music playlists, bank statements, government documents, and other aspects of your digital life, consider the following three aspects;
+                <ul>
+                    <li><strong>Availability</strong> - is your data available when and where you need it?</li>
+                    <li><strong>Confidentiality</strong> - is your data only accessible to you?</li>
+                    <li><strong>Integrity</strong> - can your data be modified without your authorization or knowledge?</li>
+                </ul>
+            </p>
+
+            <p>For example; external storage drives are cheaper than ever and can store huge amounts of data. However, you need to carry them around with you and if they get damaged, lost, or stolen your data is gone. Alternatively, cloud storage allows you to access your data from anywhere as long as you have an internet connection. But the provider is able to read and modify your data without your knowledge.</p>
+
+            <p>Isn't there a simpler way? Yes - private & secure data storage using blockchains!</p>
+
+            <p>Space encrypts your data and mines it into a blockchain ensuring: availability - your encrypted data is stored on a network spanning the globe and can be cached locally for offline access; confidentiality - your data can only be decrypted with your private key; integrity - a cryptographic signature of your encrypted data, and a cryptographic hash of the block it is mined into, ensure your data is indelible and immutable.</p>
+
+            <h2>Download & Install</h2>
+            <p>Space is currently in <a href="https://aletheiaware.com/beta/space/index.html">Closed Beta</a>.</p>
+
+            <!--
                 <p>Get Space for your device;</p>
                 <ul>
-                    <li>Android - <a href="https://play.google.com/store/apps/details?id=com.aletheiaware.space.android">Google Play Store</a> or <a download href="SpaceAndroid.apk">APK</a></li>
-                    <li>iOS - coming soon!<!--<a download href="Space"></a>--></li>
+                    <li>Android - $1 - <a href="https://play.google.com/store/apps/details?id=com.aletheiaware.space.android">Google Play Store</a> or <a download href="SpaceAndroid.apk">APK</a></li>
+                    <li>iOS - coming soon!<a download href="Space"></a></li>
                     <li>JVM - <a download href="SpaceJVM.jar">JAR</a></li>
                     <li>Linux - ARM (<a download="space" href="spaceclientgo-linux-arm5">v5</a>, <a download="space" href="spaceclientgo-linux-arm6">v6</a>, <a download="space" href="spaceclientgo-linux-arm7">v7</a>, <a download="space" href="spaceclientgo-linux-arm8">v8</a>) or Intel/AMD (<a download="space" href="spaceclientgo-linux-386">32</a>, <a download="space" href="spaceclientgo-linux-amd64">64</a>)</li>
                     <li>Mac - Intel/AMD (<a download="space" href="spaceclientgo-darwin-386">32</a>, <a download="space" href="spaceclientgo-darwin-amd64">64</a>)</li>
                     <li>Windows - Intel/AMD (<a download="space.exe" href="spaceclientgo-windows-386.exe">32</a>, <a download="space.exe" href="spaceclientgo-windows-amd64.exe">64</a>)</li>
                 </ul>
-            </li>
-            <li>
-                <h2>Initialize</h2>
-                <p>Generate your key pair consisting of a public key (which will be registered with your account) and a private key (which does not leave your possession).</p>
+            -->
+
+            <h2>Register & Subscribe</h2>
+            <p>Generate your key pair consisting of a public key (which will be registered with your account) and a private key (which does not leave your possession).
                 <pre><code>$> ./space init</code></pre>
                 <samp>
                     Creating keystore under /Users/<strong>username</strong>/bc
@@ -45,110 +73,358 @@
                     Initialized as <strong>username</strong>
                     <br>
                 </samp>
-            </li>
-            <li>
-                <h2>Sample Usage</h2>
-                <p>Environment
-                    <ul>
-                        <li>
-                            <pre><code>$> ALIAS=alice ./space</code></pre>
-                            <p>Sets the alias for Space to load from the keystore.</p>
-                        </li>
-                    </ul>
-                </p>
-                <p>Commands
-                    <ul>
-                        <li>
-                            <pre><code>$> ./space [name] text/plain</code></pre>
-                            <p>Adds a new file with the given name, mime type, and contents read from stdin.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space [name] text/plain foobar.txt</code></pre>
-                            <p>Adds a new file with the given name, mime type, and contents read from file.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space get [hash]</code></pre>
-                            <p>Gets file with the given hash and writes the data to stdout.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space get [hash] file</code></pre>
-                            <p>Gets file with the given hash and writes the data to the given file.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space init </code></pre>
-                            <p>Initializes environment, generates keys, and registers alias.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space list </code></pre>
-                            <p>Displays a list of files in reverse-chronological order.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space show [hash]</code></pre>
-                            <p>Displays the metadata of the file with the given hash.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space showall text/plain</code></pre>
-                            <p>Shows all files with the given mime type.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space tag [hash]</code></pre>
-                            <p>Displays the tags (if any) of the file with the given hash.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space tag [hash] foo bar</code></pre>
-                            <p>Adds the tags to the file with the given hash.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space search foo bar</code></pre>
-                            <p>Displays the metadata of all files which match the given tags.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space preview [hash]</code></pre>
-                            <p>Displays the preview (if any) of the file with the given hash.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space share [hash] alice bob</code></pre>
-                            <p>Shares the file with the given hash with the given aliases.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space customer </code></pre>
-                            <p>Displays Stripe customer information.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space subscription </code></pre>
-                            <p>Displays Stripe subscription information.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space upload foo text/plain</code></pre>
-                            <p>Uploads a new file with the given name, mime type, and contents read from stdin to Aletheia Ware's Remote Mining Service, saving your device battery.</p>
-                        </li>
-                        <li>
-                            <pre><code>$> ./space upload foo text/plain foobar.txt</code></pre>
-                            <p>Uploads a new file with the given name, mime type, and contents read from file to Aletheia Ware's Remote Mining Service, saving your device battery.</p>
-                        </li>
-                    </ul>
-                </p>
-            </li>
-            <li>
-                <h2>Remote Mining Service</h2>
-                <p>Save battery by mining remotely, register your alias and billing information using;
-                    <pre><code>$> ./space subscription</code></pre>
-                or click <a href="https://space.aletheiaware.com/subscription">Subscription</a> and provide the following information;
-                    <ul>
-                        <li>Alias - registered to your public key and signed by your private key.</li>
-                        <li>Email - how you would like us to contact you.</li>
-                        <li>Billing Info - how you would like to pay (this information is handled and stored by <a href="stripe.com">Stripe</a>);
-                            <ul>
-                                <li>Card Holder Name</li>
-                                <li>Card Number</li>
-                                <li>Card Expiry Date</li>
-                                <li>Card Verification Code (CVC)</li>
-                                <li>Billing Address</li>
-                            </ul>
-                        </li>
-                    </ul>
-                </p>
-            </li>
-        </ol>
+            </p>
+
+            <p>When you create an Aletheia Ware account with a unique alias and a password of at least 12 characters, a 4096bit RSA public/private key pair is generated. Your alias and public key are registered with Aletheia Ware servers, and your private key is encrypted with your password and stored on your device - it does not leave your possession and therefore only you can decrypt your data.</p>
+
+            <p>Aletheia Ware does not store your password or private key and therefore, unlike cloud storage providers, cannot read your data. Instead, Space encrypts your data on your device using your public key before mining it into a blockchain and uploading it to the network. Upon download, Space decrypts your data on your device using your private key.</p>
+
+            <p>To prevent loss of access to your data in case your device gets damaged, lost, or stolen, Aletheia Ware reccomends provisioning multiple devices (see Export & Import below) and making a hard copy of your key pair and storing it in a secure location such as a fire-proof safe, or bank vault.</p>
+
+            <h2>Encrypt & Upload</h2>
+            <p>A 128bit AES key is generated and used to encrypt each file. The key itself is then encrypted with your public key, and, along with the encrypted file, either mined into the blockchain locally, or uploaded to Aletheia Ware's <a href="https://aletheiaware.com/mining.html">Remote Mining Service</a>.
+                <pre><code>$> ./space foobar text/plain foobar.txt</code></pre>
+                <samp>
+                    Found keystore under /home/<strong>username</strong>/bc for <strong>username</strong>
+                    <br/>
+                    Enter keystore password:
+                    <br/>
+                    Mining Space-File-<strong>username</strong> 83221
+                    <br/>
+                    Mining Space-File-<strong>username</strong> 0 245 / 512
+                    <br/>
+                    Mining Space-File-<strong>username</strong> 1 260 / 512
+                    <br/>
+                    Mining Space-File-<strong>username</strong> 7 265 / 512
+                    <br/>
+                    Mining Space-File-<strong>username</strong> 11 268 / 512
+                    <br/>
+                    Mining Space-File-<strong>username</strong> 13 270 / 512
+                    <br/>
+                    Mining Space-File-<strong>username</strong> 23 275 / 512
+                    <br/>
+                    Mined Space-File-<strong>username</strong> 2019-02-15 00:07:19 1XzE6en-33OI7gqsy4lQZVE-VuNVN50AyAs2Ax4cKnt_p9kmolzud2s98sr37AVvqJWQ98tiC7nMbj8PRfs7SA
+                    <br/>
+                    Space-File-<strong>username</strong> updated to 1XzE6en-33OI7gqsy4lQZVE-VuNVN50AyAs2Ax4cKnt_p9kmolzud2s98sr37AVvqJWQ98tiC7nMbj8PRfs7SA
+                    <br/>
+                    Multicasting Space-File-<strong>username</strong> 1XzE6en-33OI7gqsy4lQZVE-VuNVN50AyAs2Ax4cKnt_p9kmolzud2s98sr37AVvqJWQ98tiC7nMbj8PRfs7SA
+                    <br/>
+                    Mined foobar in 1 chunks
+                    <br/>
+                    Mining Space-Meta-<strong>username</strong> 6375
+                    <br/>
+                    Mining Space-Meta-<strong>username</strong> 0 268 / 512
+                    <br/>
+                    Mining Space-Meta-<strong>username</strong> 3 269 / 512
+                    <br/>
+                    Mining Space-Meta-<strong>username</strong> 18 273 / 512
+                    <br/>
+                    Mined Space-Meta-<strong>username</strong> 2019-02-15 00:07:54 wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg
+                    <br/>
+                    Space-Meta-<strong>username</strong> updated to wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg
+                    <br/>
+                    Multicasting Space-Meta-<strong>username</strong> wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg
+                </samp>
+            </p>
+
+            <h2>List & Show</h2>
+            <p>Each time a file is stored, a Meta object is also created which includes the time, file name, mime type, size, and references the file's encrypted data. The Meta object is also encrypted but mined into a different blockchain, allowing you to list your stored files and view information about them, without needing to sync the blockchain containing the file's encrypted data.
+                <pre><code>$> ./space list</code></pre>
+                <samp>
+                    Found keystore under /home/<strong>username</strong>/bc for <strong>username</strong>
+                    <br/>
+                    Enter keystore password:
+                    <br/>
+                    Files:
+                    <br/>
+                    wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg 2019-02-15 00:07:54 foobar text/plain 82Kb
+                    <br/>
+                    1
+                    <br/>
+                    Shared Files:
+                    <br/>
+                    0
+                    <br/>
+                </samp>
+                <pre><code>$> ./space show wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg</code></pre>
+                <samp>
+                    Found keystore under /home/<strong>username</strong>/bc for <strong>username</strong>
+                    <br/>
+                    Enter keystore password:
+                    <br/>
+                    Hash: wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg
+                    <br/>
+                    Timestamp: 2019-02-15 00:07:54
+                    <br/>
+                    Name: foobar
+                    <br/>
+                    Type: text/plain
+                    <br/>
+                    Size: 82Kb
+                    <br/>
+                    Chunks: 1
+                    <br/>
+                    &emsp;0 1XzE6en-33OI7gqsy4lQZVE-VuNVN50AyAs2Ax4cKnt_p9kmolzud2s98sr37AVvqJWQ98tiC7nMbj8PRfs7SA
+                </samp>
+                <pre><code>$> ./space showall text/plain</code></pre>
+                <samp>
+                    Found keystore under /home/<strong>username</strong>/bc for <strong>username</strong>
+                    <br/>
+                    Enter keystore password:
+                    <br/>
+                    Files:
+                    <br/>
+                    wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg 2019-02-15 00:07:54 foobar text/plain 82Kb
+                    <br/>
+                    1
+                    <br/>
+                    Shared Files:
+                    <br/>
+                    0
+                    <br/>
+                </samp>
+            </p>
+
+            <h2>Download & Decrypt</h2>
+            <p>After being mined, your encrypted data and associated key can be downloaded and decrypted using your private key.
+                <pre><code>$> ./space get wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg new_foobar.txt</code></pre>
+                <samp>
+                    Found keystore under /home/<strong>username</strong>/bc for <strong>username</strong>
+                    <br/>
+                    Enter keystore password:
+                    <br/>
+                    ...
+                    <br/>
+                    Written to new_foobar.txt
+                </samp>
+            </p>
+
+            <h2>Tag & Search</h2>
+            <p>Organize files by tagging them and then searching by tag.
+                <pre><code>$> ./space tag wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg foo bar</code></pre>
+                <samp>
+                    Found keystore under /home/<strong>username</strong>/bc for <strong>username</strong>
+                    <br/>
+                    Enter keystore password:
+                    <br/>
+                    ...
+                    <br/>
+                    Tagging foobar with [foo bar]
+                    <br/>
+                    Mining Space-Tag-<strong>username</strong> 1395
+                    <br/>
+                    Mining Space-Tag-<strong>username</strong> 0 257 / 512
+                    <br/>
+                    Mining Space-Tag-<strong>username</strong> 1 270 / 512
+                    <br/>
+                    Mining Space-Tag-<strong>username</strong> 5 274 / 512
+                    <br/>
+                    Mined Space-Tag-<strong>username</strong> 2019-02-15 09:34:37 YYQHI7-IvfDVuYJGJ9t_bfv2_x8ot9xg1F_0duZ31L8oRnQYFus62u_whhcKfBp5HmDe1thurCWhARyi2V9LcQ
+                    <br/>
+                    Space-Tag-<strong>username</strong> updated to YYQHI7-IvfDVuYJGJ9t_bfv2_x8ot9xg1F_0duZ31L8oRnQYFus62u_whhcKfBp5HmDe1thurCWhARyi2V9LcQ
+                    <br/>
+                    Multicasted Space-Tag-<strong>username</strong> block YYQHI7-IvfDVuYJGJ9t_bfv2_x8ot9xg1F_0duZ31L8oRnQYFus62u_whhcKfBp5HmDe1thurCWhARyi2V9LcQ to space.aletheiaware.com
+                    <br/>
+                    Multicasted Space-Tag-<strong>username</strong> block YYQHI7-IvfDVuYJGJ9t_bfv2_x8ot9xg1F_0duZ31L8oRnQYFus62u_whhcKfBp5HmDe1thurCWhARyi2V9LcQ to bc.aletheiaware.com
+                    <br/>
+                    Tagged wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg foo 3RNaQcMaBMzq56IbHeLh2HrKTp2OcztJS8E4tGeLZO-qTfo1c1YWaBS4wKMAtM1qwHhJMFAKtJF9Za169nKyIA
+                    <br/>
+                    Mining Space-Tag-<strong>username</strong> 1396
+                    <br/>
+                    Mining Space-Tag-<strong>username</strong> 0 255 / 512
+                    <br/>
+                    Mining Space-Tag-<strong>username</strong> 1 261 / 512
+                    <br/>
+                    Mining Space-Tag-<strong>username</strong> 5 266 / 512
+                    <br/>
+                    Mining Space-Tag-<strong>username</strong> 6 267 / 512
+                    <br/>
+                    Mining Space-Tag-<strong>username</strong> 7 271 / 512
+                    <br/>
+                    Mining Space-Tag-<strong>username</strong> 15 279 / 512
+                    <br/>
+                    Mined Space-Tag-<strong>username</strong> 2019-02-15 09:34:37 Vl_5qofvfNDKKdBqMjO5LLrYGVmWcPMdvkxtrUnOiIpvDpc27CtiWOyuIz3KhvE9lLxqt9_y46UpL6_mv9OK9A
+                    <br/>
+                    Space-Tag-<strong>username</strong> updated to Vl_5qofvfNDKKdBqMjO5LLrYGVmWcPMdvkxtrUnOiIpvDpc27CtiWOyuIz3KhvE9lLxqt9_y46UpL6_mv9OK9A
+                    <br/>
+                    Multicasted Space-Tag-<strong>username</strong> block Vl_5qofvfNDKKdBqMjO5LLrYGVmWcPMdvkxtrUnOiIpvDpc27CtiWOyuIz3KhvE9lLxqt9_y46UpL6_mv9OK9A to space.aletheiaware.com
+                    <br/>
+                    Multicasted Space-Tag-<strong>username</strong> block Vl_5qofvfNDKKdBqMjO5LLrYGVmWcPMdvkxtrUnOiIpvDpc27CtiWOyuIz3KhvE9lLxqt9_y46UpL6_mv9OK9A to bc.aletheiaware.com
+                    <br/>
+                    Tagged wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg bar AAs_V0ay75PyXLPDSyIak0meSdADasnZvgpAiewF-oAPWex8bMPkTEmRBUohAVHTQBBWjcr7HCx-tsIiDr0IpQ
+                </samp>
+                <pre><code>$> ./space search foo</code></pre>
+                <samp>
+                    Found keystore under /home/<strong>username</strong>/bc for <strong>username</strong>
+                    <br/>
+                    Enter keystore password:
+                    <br/>
+                    Searching Files for [foo]
+                    <br/>
+                    wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg 2019-02-15 00:07:54 foobar text/plain 82Kb
+                    <br/>
+                    1
+                    <br/>
+                    Searching Shared Files for [foo]
+                    <br/>
+                    0
+                    <br/>
+                </samp>
+            </p>
+
+            <h2>Share & Receive</h2>
+            <p>Files you own can be shared with other aliases, and files shared with you can be listed, shown, tagged, searched, and downloaded just like your files.
+                <pre><code>$> ./space share wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg alice</code></pre>
+                <samp>
+                    Found keystore under /home/<strong>username</strong>/bc for <strong>username</strong>
+                    <br/>
+                    Enter keystore password:
+                    <br/>
+                    Sharing foobar with [alice]
+                    <br/>
+                    Mining Space-Share-alice 2482
+                    <br/>
+                    Mining Space-Share-alice 0 252 / 512
+                    <br/>
+                    Mining Space-Share-alice 1 262 / 512
+                    <br/>
+                    Mining Space-Share-alice 8 265 / 512
+                    <br/>
+                    Mining Space-Share-alice 12 267 / 512
+                    <br/>
+                    Mining Space-Share-alice 19 272 / 512
+                    <br/>
+                    Mining Space-Share-alice 25 273 / 512
+                    <br/>Mined Space-Share-alice 2019-02-16 00:21:12 bR--pY11eKtYwC9xCoNnI2dKJMYa3k5Sl51QybXcpUPPL94DO-o7UNSn3jA631F59bLy8su5FvDfJ-PzOkTgrg
+                    <br/>Space-Share-alice updated to bR--pY11eKtYwC9xCoNnI2dKJMYa3k5Sl51QybXcpUPPL94DO-o7UNSn3jA631F59bLy8su5FvDfJ-PzOkTgrg
+                    <br/>Multicasting Space-Share-alice bR--pY11eKtYwC9xCoNnI2dKJMYa3k5Sl51QybXcpUPPL94DO-o7UNSn3jA631F59bLy8su5FvDfJ-PzOkTgrg
+                    <br/>Shared alice bR--pY11eKtYwC9xCoNnI2dKJMYa3k5Sl51QybXcpUPPL94DO-o7UNSn3jA631F59bLy8su5FvDfJ-PzOkTgrg WJNeQvQ7qTzFzEyjLi_9lbgqydaRhQ2LDmDRT5LcD65m6fgdtbYncWdLgOtAglSRjr5HoqWXhgD46IHfm3dlqg
+                    <br/>
+                </samp>
+                <pre><code>$> ALIAS=alice ./space list</code></pre>
+                <samp>
+                    Found keystore under /home/<strong>username</strong>/bc for alice
+                    <br/>
+                    Enter keystore password:
+                    <br/>
+                    Files:
+                    <br/>
+                    0
+                    <br/>
+                    Shared Files:
+                    <br/>
+                    wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg 2019-02-15 00:07:54 foobar text/plain 82Kb
+                    <br/>
+                    1
+                    <br/>
+                </samp>
+            </p>
+
+            <h2>Export & Import</h2>
+            <p>Your public/private key pair can be exported to other devices giving you easy access to your data from any supported device. Provisioning your key pair on multiple devices can help prevent loss of access to your data in case one of your devices gets damaged, lost, or stolen.</p>
+
+            <h2>Remote Mining Service</h2>
+            <p>Save battery by mining remotely with Aletheia Ware's <a href="https://aletheiaware.com/mining.html">Remote Mining Service</a>. Click <a href="https://space.aletheiaware.com/subscription">Subscription</a> and provide the following information to register;
+                <ul>
+                    <li>Alias - registered to your public key and signed by your private key.</li>
+                    <li>Email - how you would like us to contact you.</li>
+                    <li>Billing Info - how you would like to pay (this information is handled and stored by <a href="https://stripe.com">Stripe</a>);
+                        <ul>
+                            <li>Card Holder Name</li>
+                            <li>Card Number</li>
+                            <li>Card Expiry Date</li>
+                            <li>Card Verification Code (CVC)</li>
+                            <li>Billing Address</li>
+                        </ul>
+                    </li>
+                </ul>
+            </p>
+
+            <h2>Sample Usage</h2>
+            <p>Environment
+                <ul>
+                    <li>
+                        <pre><code>$> ALIAS=alice ./space</code></pre>
+                        <p>Sets the alias for Space to load from the keystore.</p>
+                    </li>
+                </ul>
+            </p>
+            <p>Commands
+                <ul>
+                    <li>
+                        <pre><code>$> ./space [name] text/plain</code></pre>
+                        <p>Adds a new file with the given name, mime type, and contents read from stdin.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space [name] text/plain foobar.txt</code></pre>
+                        <p>Adds a new file with the given name, mime type, and contents read from file.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space get [hash]</code></pre>
+                        <p>Gets file with the given hash and writes the data to stdout.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space get [hash] file</code></pre>
+                        <p>Gets file with the given hash and writes the data to the given file.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space init </code></pre>
+                        <p>Initializes environment, generates keys, and registers alias.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space list </code></pre>
+                        <p>Displays a list of files in reverse-chronological order.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space show [hash]</code></pre>
+                        <p>Displays the metadata of the file with the given hash.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space showall text/plain</code></pre>
+                        <p>Shows all files with the given mime type.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space tag [hash]</code></pre>
+                        <p>Displays the tags (if any) of the file with the given hash.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space tag [hash] foo bar</code></pre>
+                        <p>Adds the tags to the file with the given hash.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space search foo bar</code></pre>
+                        <p>Displays the metadata of all files which match the given tags.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space preview [hash]</code></pre>
+                        <p>Displays the preview (if any) of the file with the given hash.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space share [hash] alice bob</code></pre>
+                        <p>Shares the file with the given hash with the given aliases.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space customer </code></pre>
+                        <p>Displays Stripe customer information.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space subscription </code></pre>
+                        <p>Displays Stripe subscription information.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space post foo text/plain</code></pre>
+                        <p>Posts a new file with the given name, mime type, and contents read from stdin to Aletheia Ware's Remote Mining Service, saving your device battery.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space post foo text/plain foobar.txt</code></pre>
+                        <p>Posts a new file with the given name, mime type, and contents read from file to Aletheia Ware's Remote Mining Service, saving your device battery.</p>
+                    </li>
+                </ul>
+            </p>
+
+            <div class="footer">
+                <p>© 2019 Aletheia Ware LLC.  All rights reserved.</p>
+            </div>
+        </div>
     </body>
 </html>
