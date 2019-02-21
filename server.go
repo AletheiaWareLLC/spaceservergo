@@ -19,6 +19,7 @@ package main
 import (
 	"bufio"
 	"crypto/rsa"
+	"encoding/base64"
 	"fmt"
 	"github.com/AletheiaWareLLC/aliasgo"
 	"github.com/AletheiaWareLLC/bcgo"
@@ -42,17 +43,32 @@ func main() {
 	// Serve Head Requests
 	go bcnetgo.Bind(bcgo.PORT_HEAD, bcnetgo.HandleHead)
 	// Serve Block Updates
-	go bcnetgo.Bind(bcgo.PORT_MULTICAST, bcnetgo.HandleUpdate)
+	go bcnetgo.Bind(bcgo.PORT_CAST, bcnetgo.HandleCast)
 
 	// Serve Web Requests
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", bcnetgo.HandleStatic)
 	mux.HandleFunc("/alias", bcnetgo.HandleAlias)
-	mux.HandleFunc("/mining/file", PrefixAliasMiningHandler(spacego.SPACE_PREFIX_FILE))
-	mux.HandleFunc("/mining/meta", PrefixAliasMiningHandler(spacego.SPACE_PREFIX_META))
-	mux.HandleFunc("/mining/preview", PrefixAliasMiningHandler(spacego.SPACE_PREFIX_PREVIEW))
-	mux.HandleFunc("/mining/share", PrefixAliasMiningHandler(spacego.SPACE_PREFIX_SHARE))
-	mux.HandleFunc("/mining/tag", PrefixAliasMiningHandler(spacego.SPACE_PREFIX_TAG))
+	mux.HandleFunc("/mining/file", CreateMiningHandler(func(record *bcgo.Record) (*bcgo.Channel, error) {
+		// Space-File-<creator-alias>
+		return bcgo.OpenChannel(spacego.SPACE_PREFIX_FILE + record.Creator)
+	}))
+	mux.HandleFunc("/mining/meta", CreateMiningHandler(func(record *bcgo.Record) (*bcgo.Channel, error) {
+		// Space-Meta-<creator-alias>
+		return bcgo.OpenChannel(spacego.SPACE_PREFIX_META + record.Creator)
+	}))
+	mux.HandleFunc("/mining/share", CreateMiningHandler(func(record *bcgo.Record) (*bcgo.Channel, error) {
+		// Space-Share-<receiver-alias>
+		return bcgo.OpenChannel(spacego.SPACE_PREFIX_SHARE + record.Access[0].Alias) // TODO handle all Accesses
+	}))
+	mux.HandleFunc("/mining/preview", CreateMiningHandler(func(record *bcgo.Record) (*bcgo.Channel, error) {
+		// Space-Preview-<meta-record-hash>
+		return bcgo.OpenChannel(spacego.SPACE_PREFIX_PREVIEW + base64.RawURLEncoding.EncodeToString(record.Reference[0].RecordHash)) // TODO handle all References
+	}))
+	mux.HandleFunc("/mining/tag", CreateMiningHandler(func(record *bcgo.Record) (*bcgo.Channel, error) {
+		// Space-Tag-<meta-record-hash>
+		return bcgo.OpenChannel(spacego.SPACE_PREFIX_TAG + base64.RawURLEncoding.EncodeToString(record.Reference[0].RecordHash)) // TODO handle all References
+	}))
 	mux.HandleFunc("/stripe-webhook", HandleStripeWebhook)
 	// TODO mux.HandleFunc("/registration", HandleRegister)
 	mux.HandleFunc("/subscription", HandleSubscribe)
@@ -236,7 +252,7 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func PrefixAliasMiningHandler(prefix string) func(http.ResponseWriter, *http.Request) {
+func CreateMiningHandler(lookup func(*bcgo.Record) (*bcgo.Channel, error)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.RemoteAddr, r.Proto, r.Method, r.Host, r.URL.Path)
 		switch r.Method {
@@ -322,8 +338,8 @@ func PrefixAliasMiningHandler(prefix string) func(http.ResponseWriter, *http.Req
 				// TODO Mine bcUsageRecord into UsageChannel
 			}
 
-			// Open Channel
-			channel, err := bcgo.OpenChannel(prefix + request.Creator)
+			// Lookup Channel
+			channel, err := lookup(request)
 			if err != nil {
 				log.Println(err)
 				return
