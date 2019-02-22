@@ -102,7 +102,7 @@ func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// TODO split into HandleRegister for creating Customer, and HandleSubscribe for creating Subscription
+// TODO split into HandleCustomer for showing/creating Customers, and HandleSubscription for showing/creating Subscriptions
 func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.RemoteAddr, r.Proto, r.Method, r.Host, r.URL.Path)
 	switch r.Method {
