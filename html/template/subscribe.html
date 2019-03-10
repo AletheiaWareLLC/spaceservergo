@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <head>
+        <title>Space</title>
+    </head>
+
+    <body>
+        <h1>Space</h1>
+        <p>Welcome to Space, please provide the following information to subscribe;</p>
+        <form action="subscribe" method="POST">
+            Alias
+            <br>
+            <textarea name="alias" rows="1" cols="60">{{ .Alias }}</textarea>
+            <br>
+            Customer ID
+            <br>
+            <textarea name="customerId" rows="1" cols="60">{{ .CustomerId }}</textarea>
+            <br>
+            <br>
+            <input type="submit" value="Subscribe" />
+        </form>
+    </body>
+</html>

@@ -43,6 +43,7 @@ func main() {
 	// Serve Head Requests
 	go bcnetgo.Bind(bcgo.PORT_HEAD, bcnetgo.HandleHead)
 	// Serve Block Updates
+	// TODO only store blocks in allowed channels (alias, file, meta, share, preview)
 	go bcnetgo.Bind(bcgo.PORT_CAST, bcnetgo.HandleCast)
 
 	// Serve Web Requests
@@ -70,8 +71,8 @@ func main() {
 		return bcgo.OpenChannel(spacego.SPACE_PREFIX_TAG + base64.RawURLEncoding.EncodeToString(record.Reference[0].RecordHash)) // TODO handle all References
 	}))
 	mux.HandleFunc("/stripe-webhook", HandleStripeWebhook)
-	// TODO mux.HandleFunc("/registration", HandleRegister)
-	mux.HandleFunc("/subscription", HandleSubscribe)
+	mux.HandleFunc("/register", HandleRegister)
+	mux.HandleFunc("/subscribe", HandleSubscribe)
 	store, err := bcnetgo.GetSecurityStore()
 	if err != nil {
 		log.Println(err)
@@ -102,23 +103,22 @@ func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// TODO split into HandleCustomer for showing/creating Customers, and HandleSubscription for showing/creating Subscriptions
-func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
+func HandleRegister(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.RemoteAddr, r.Proto, r.Method, r.Host, r.URL.Path)
 	switch r.Method {
 	case "GET":
 		query := r.URL.Query()
-		var a string
+		var alias string
 		if results, ok := query["alias"]; ok && len(results) == 1 {
-			a = results[0]
+			alias = results[0]
 		}
-		log.Println("Alias", a)
+		log.Println("Alias", alias)
 		var publicKey string
 		if results, ok := query["publicKey"]; ok && len(results) == 1 {
 			publicKey = results[0]
 		}
 		log.Println("PublicKey", publicKey)
-		t, err := template.ParseFiles("html/template/subscription.html")
+		t, err := template.ParseFiles("html/template/register.html")
 		if err != nil {
 			log.Println(err)
 			return
@@ -130,10 +130,10 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 			Alias       string
 			PublicKey   string
 		}{
-			Description: "Remote Mining Service",
+			Description: "Space",
 			Key:         os.Getenv("STRIPE_PUBLISHABLE_KEY"),
 			Name:        "Aletheia Ware LLC",
-			Alias:       a,
+			Alias:       alias,
 			PublicKey:   publicKey,
 		}
 		log.Println("Data", data)
@@ -213,10 +213,86 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 			}
 			log.Println("CustomerReference", customerReference)
 
+			http.Redirect(w, r, "/registered.html", http.StatusFound)
+		}
+	default:
+		log.Println("Unsupported method", r.Method)
+	}
+}
+
+func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.RemoteAddr, r.Proto, r.Method, r.Host, r.URL.Path)
+	switch r.Method {
+	case "GET":
+		query := r.URL.Query()
+		var alias string
+		if results, ok := query["alias"]; ok && len(results) == 1 {
+			alias = results[0]
+		}
+		log.Println("Alias", alias)
+		var id string
+		if results, ok := query["customerId"]; ok && len(results) == 1 {
+			id = results[0]
+		}
+		log.Println("Customer ID", id)
+		t, err := template.ParseFiles("html/template/subscribe.html")
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		data := struct {
+			Alias      string
+			CustomerId string
+		}{
+			Alias:      alias,
+			CustomerId: id,
+		}
+		log.Println("Data", data)
+		err = t.Execute(w, data)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+	case "POST":
+		r.ParseForm()
+		a := r.Form["alias"]
+		customerId := r.Form["customerId"]
+
+		if len(a) > 0 && len(customerId) > 0 {
+			node, err := bcgo.GetNode()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			aliases, err := aliasgo.OpenAliasChannel()
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			if err := aliases.Sync(); err != nil {
+				log.Println(err)
+				return
+			}
+			// Get rsa.PublicKey for Alias
+			publicKey, err := aliasgo.GetPublicKey(aliases, a[0])
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			// Create list of access (user + server)
+			acl := map[string]*rsa.PublicKey{
+				a[0]:       publicKey,
+				node.Alias: &node.Key.PublicKey,
+			}
+			log.Println("Access", acl)
+
 			productId := os.Getenv("STRIPE_PRODUCT_ID")
 			planId := os.Getenv("STRIPE_PLAN_ID")
 
-			stripeSubscription, bcSubscription, err := financego.NewSubscription(a[0], stripeCustomer.ID, "", productId, planId)
+			stripeSubscription, bcSubscription, err := financego.NewSubscription(a[0], customerId[0], "", productId, planId)
 			if err != nil {
 				log.Println(err)
 				return
@@ -236,16 +312,14 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			references := []*bcgo.Reference{customerReference}
-
-			subscriptionReference, err := node.Mine(subscriptions, acl, references, subscriptionData)
+			subscriptionReference, err := node.Mine(subscriptions, acl, nil, subscriptionData)
 			if err != nil {
 				log.Println(err)
 				return
 			}
 			log.Println("SubscriptionReference", subscriptionReference)
 
-			http.Redirect(w, r, "/success.html", http.StatusFound)
+			http.Redirect(w, r, "/subscribed.html", http.StatusFound)
 		}
 	default:
 		log.Println("Unsupported method", r.Method)
