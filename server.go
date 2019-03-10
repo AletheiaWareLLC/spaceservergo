@@ -43,7 +43,7 @@ func main() {
 	// Serve Head Requests
 	go bcnetgo.Bind(bcgo.PORT_HEAD, bcnetgo.HandleHead)
 	// Serve Block Updates
-	// TODO only store blocks in allowed channels (alias, file, meta, share, preview)
+	// TODO only store blocks from registered customers in allowed channels (alias, file, meta, share, preview)
 	go bcnetgo.Bind(bcgo.PORT_CAST, bcnetgo.HandleCast)
 
 	// Serve Web Requests
@@ -128,13 +128,11 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
 			Key         string
 			Name        string
 			Alias       string
-			PublicKey   string
 		}{
 			Description: "Space",
 			Key:         os.Getenv("STRIPE_PUBLISHABLE_KEY"),
 			Name:        "Aletheia Ware LLC",
 			Alias:       alias,
-			PublicKey:   publicKey,
 		}
 		log.Println("Data", data)
 		err = t.Execute(w, data)
