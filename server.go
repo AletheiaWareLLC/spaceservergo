@@ -37,7 +37,13 @@ import (
 )
 
 func main() {
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	logFile, err := bcnetgo.SetupLogging()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer logFile.Close()
+
 	// Serve Block Requests
 	go bcnetgo.Bind(bcgo.PORT_BLOCK, bcnetgo.HandleBlock)
 	// Serve Head Requests
@@ -142,7 +148,8 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
 		}
 	case "POST":
 		r.ParseForm()
-		a := r.Form["alias"]
+		api := r.Form["api"]
+		alias := r.Form["alias"]
 		stripeEmail := r.Form["stripeEmail"]
 		// stripeBillingName := r.Form["stripeBillingName"]
 		// stripeBillingAddressLine1 := r.Form["stripeBillingAddressLine1"]
@@ -154,7 +161,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
 		stripeToken := r.Form["stripeToken"]
 		// stripeTokenType := r.Form["stripeTokenType"]
 
-		if len(a) > 0 && len(stripeEmail) > 0 && len(stripeToken) > 0 {
+		if len(alias) > 0 && len(stripeEmail) > 0 && len(stripeToken) > 0 {
 			node, err := bcgo.GetNode()
 			if err != nil {
 				log.Println(err)
@@ -172,7 +179,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// Get rsa.PublicKey for Alias
-			publicKey, err := aliasgo.GetPublicKey(aliases, a[0])
+			publicKey, err := aliasgo.GetPublicKey(aliases, alias[0])
 			if err != nil {
 				log.Println(err)
 				return
@@ -180,12 +187,12 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
 
 			// Create list of access (user + server)
 			acl := map[string]*rsa.PublicKey{
-				a[0]:       publicKey,
+				alias[0]:   publicKey,
 				node.Alias: &node.Key.PublicKey,
 			}
 			log.Println("Access", acl)
 
-			stripeCustomer, bcCustomer, err := financego.NewCustomer(a[0], stripeEmail[0], stripeToken[0], "Aletheia Ware LLC Mining Service Customer")
+			stripeCustomer, bcCustomer, err := financego.NewCustomer(alias[0], stripeEmail[0], stripeToken[0], "Aletheia Ware LLC Mining Service Customer")
 			if err != nil {
 				log.Println(err)
 				return
@@ -211,7 +218,18 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
 			}
 			log.Println("CustomerReference", customerReference)
 
-			http.Redirect(w, r, "/registered.html", http.StatusFound)
+			switch api[0] {
+			case "1":
+				w.Write([]byte(stripeCustomer.ID))
+				w.Write([]byte("\n"))
+			case "2":
+				if err := bcgo.WriteReference(bufio.NewWriter(w), customerReference); err != nil {
+					log.Println(err)
+					return
+				}
+			default:
+				http.Redirect(w, r, "/registered.html", http.StatusFound)
+			}
 		}
 	default:
 		log.Println("Unsupported method", r.Method)
@@ -253,10 +271,11 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 		}
 	case "POST":
 		r.ParseForm()
-		a := r.Form["alias"]
+		api := r.Form["api"]
+		alias := r.Form["alias"]
 		customerId := r.Form["customerId"]
 
-		if len(a) > 0 && len(customerId) > 0 {
+		if len(alias) > 0 && len(customerId) > 0 {
 			node, err := bcgo.GetNode()
 			if err != nil {
 				log.Println(err)
@@ -274,7 +293,7 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// Get rsa.PublicKey for Alias
-			publicKey, err := aliasgo.GetPublicKey(aliases, a[0])
+			publicKey, err := aliasgo.GetPublicKey(aliases, alias[0])
 			if err != nil {
 				log.Println(err)
 				return
@@ -282,7 +301,7 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 
 			// Create list of access (user + server)
 			acl := map[string]*rsa.PublicKey{
-				a[0]:       publicKey,
+				alias[0]:   publicKey,
 				node.Alias: &node.Key.PublicKey,
 			}
 			log.Println("Access", acl)
@@ -290,7 +309,7 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 			productId := os.Getenv("STRIPE_PRODUCT_ID")
 			planId := os.Getenv("STRIPE_PLAN_ID")
 
-			stripeSubscription, bcSubscription, err := financego.NewSubscription(a[0], customerId[0], "", productId, planId)
+			stripeSubscription, bcSubscription, err := financego.NewSubscription(alias[0], customerId[0], "", productId, planId)
 			if err != nil {
 				log.Println(err)
 				return
@@ -317,7 +336,18 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 			}
 			log.Println("SubscriptionReference", subscriptionReference)
 
-			http.Redirect(w, r, "/subscribed.html", http.StatusFound)
+			switch api[0] {
+			case "1":
+				w.Write([]byte(stripeSubscription.ID))
+				w.Write([]byte("\n"))
+			case "2":
+				if err := bcgo.WriteReference(bufio.NewWriter(w), subscriptionReference); err != nil {
+					log.Println(err)
+					return
+				}
+			default:
+				http.Redirect(w, r, "/subscribed.html", http.StatusFound)
+			}
 		}
 	default:
 		log.Println("Unsupported method", r.Method)
@@ -327,6 +357,7 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 func CreateMiningHandler(lookup func(*bcgo.Record) (*bcgo.Channel, error)) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.RemoteAddr, r.Proto, r.Method, r.Host, r.URL.Path)
+		log.Println(r.Header)
 		switch r.Method {
 		case "POST":
 			request, err := bcgo.ReadRecord(bufio.NewReader(r.Body))
