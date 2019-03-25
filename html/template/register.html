@@ -4,27 +4,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <head>
+        <link rel="stylesheet" href="styles.css">
         <title>Space</title>
     </head>
 
     <body>
-        <h1>Space</h1>
-        <p>Welcome to Space, please provide the following information to register;</p>
-        <form action="register" method="POST">
-            Alias
-            <br>
-            <textarea name="alias" rows="1" cols="60">{{ .Alias }}</textarea>
-            <br>
-            <br>
-            <script src="https://checkout.stripe.com/checkout.js" class="stripe-button"
-                data-billing-address="true"
-                data-description="{{ .Description }}"
-                data-key="{{ .Key }}"
-                data-label="Register"
-                data-locale="auto"
-                data-name="{{ .Name }}"
-                data-panel-label="Register"
-                data-zip-code="true"></script>
-        </form>
+        <div class="content">
+            <div class="header">
+                <a href="https://aletheiaware.com">
+                    <img src="logo.svg" />
+                </a>
+            </div>
+
+            <h1>Space</h1>
+            <p>Welcome to Space, please provide the following information to register;</p>
+            <form action="register" method="POST">
+                Alias
+                <br>
+                <textarea name="alias" rows="1" cols="60">{{ .Alias }}</textarea>
+                <br>
+                <br>
+                <script src="https://checkout.stripe.com/checkout.js" class="stripe-button"
+                    data-billing-address="true"
+                    data-description="{{ .Description }}"
+                    data-key="{{ .Key }}"
+                    data-label="Register"
+                    data-locale="auto"
+                    data-name="{{ .Name }}"
+                    data-panel-label="Register"
+                    data-zip-code="true"></script>
+            </form>
+
+            <div class="footer">
+                <p>© 2019 Aletheia Ware LLC.  All rights reserved.</p>
+            </div>
+        </div>
     </body>
 </html>
