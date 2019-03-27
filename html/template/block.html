@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <head>
+        <link rel="stylesheet" href="styles.css">
+        <title>Space</title>
+    </head>
+
+    <body>
+        <div class="content">
+            <div class="header">
+                <a href="https://aletheiaware.com">
+                    <img src="logo.svg" />
+                </a>
+            </div>
+
+            <h1>Space</h1>
+
+            <table>
+                <tr>
+                    <td>Hash</td>
+                    <td>{{ .Hash }}</td>
+                </tr>
+                <tr>
+                    <td>Timestamp</td>
+                    <td>{{ .Timestamp }}</td>
+                </tr>
+                <tr>
+                    <td>Channel</td>
+                    <td>{{ .Channel }}</td>
+                </tr>
+                <tr>
+                    <td>Length</td>
+                    <td>{{ .Length }}</td>
+                </tr>
+                <tr>
+                    <td>Previous</td>
+                    <td><a href="block?channel={{ .Channel }}&hash={{ .Previous }}">{{ .Previous }}</a></td>
+                </tr>
+                <tr>
+                    <td>Miner</td>
+                    <td><a href="alias?alias={{ .Miner }}">{{ .Miner }}</a></td>
+                </tr>
+                <tr>
+                    <td>Nonce</td>
+                    <td>{{ .Nonce }}</td>
+                </tr>
+                {{ range $entry_key, $entry_value := .Entry }}
+                <tr>
+                    <td>Entry {{ $entry_key }}</td>
+                    <td>
+                        <table>
+                            <tr>
+                                <td>Hash</td>
+                                <td>{{ $entry_value.Hash }}</td>
+                            </tr>
+                            <tr>
+                                <td>Timestamp</td>
+                                <td>{{ $entry_value.Timestamp }}</td>
+                            </tr>
+                            <tr>
+                                <td>Creator</td>
+                                <td><a href="alias?alias={{ $entry_value.Creator }}">{{ $entry_value.Creator }}</a></td>
+                            </tr>
+                            <tr>
+                                <td>Access</td>
+                                <td>
+                                    <table>
+                                        {{ range $access_key, $access_value := $entry_value.Access }}
+                                        <tr>
+                                            <td>Access {{ $access_key }}</td>
+                                            <td>
+                                                <table>
+                                                    <tr>
+                                                        <td>Alias</td>
+                                                        <td><a href="alias?alias={{ $access_value.Alias }}">{{ $access_value.Alias }}</a></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>SecretKey</td>
+                                                        <td>{{ $access_value.SecretKey }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>EncryptionAlgorithm</td>
+                                                        <td>{{ $access_value.EncryptionAlgorithm }}</td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        {{ end }}
+                                    </table>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Payload</td>
+                                <td>{{ $entry_value.Payload }}</td>
+                            </tr>
+                            <tr>
+                                <td>CompressionAlgorithm</td>
+                                <td>{{ $entry_value.CompressionAlgorithm }}</td>
+                            </tr>
+                            <tr>
+                                <td>EncryptionAlgorithm</td>
+                                <td>{{ $entry_value.EncryptionAlgorithm }}</td>
+                            </tr>
+                            <tr>
+                                <td>Signature</td>
+                                <td>{{ $entry_value.Signature }}</td>
+                            </tr>
+                            <tr>
+                                <td>SignatureAlgorithm</td>
+                                <td>{{ $entry_value.SignatureAlgorithm }}</td>
+                            </tr>
+                            <tr>
+                                <td>Reference</td>
+                                <td>
+                                    <table>
+                                        {{ range $reference_key, $reference_value := $entry_value.Reference }}
+                                        <tr>
+                                            <td>Reference {{ $reference_key }}</td>
+                                            <td>
+                                                <table>
+                                                    <tr>
+                                                        <td>Timestamp</td>
+                                                        <td>{{ $reference_value.Timestamp }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Channel</td>
+                                                        <td>{{ $reference_value.Channel }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>BlockHash</td>
+                                                        <td><a href="block?channel={{ $reference_value.Channel }}&hash={{ $reference_value.BlockHash }}">{{ $reference_value.BlockHash }}</a></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>RecordHash</td>
+                                                        <td>{{ $reference_value.RecordHash }}</td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        {{ end }}
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                {{ end }}
+            </table>
+
+            <div class="footer">
+                <p>© 2019 Aletheia Ware LLC.  All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+</html>

@@ -45,17 +45,20 @@ func main() {
 	defer logFile.Close()
 
 	// Serve Block Requests
-	go bcnetgo.Bind(bcgo.PORT_BLOCK, bcnetgo.HandleBlock)
+	go bcnetgo.Bind(bcgo.PORT_BLOCK, bcnetgo.HandleBlockPort)
 	// Serve Head Requests
-	go bcnetgo.Bind(bcgo.PORT_HEAD, bcnetgo.HandleHead)
+	go bcnetgo.Bind(bcgo.PORT_HEAD, bcnetgo.HandleHeadPort)
 	// Serve Block Updates
 	// TODO only store blocks from registered customers in allowed channels (alias, file, meta, share, preview)
-	go bcnetgo.Bind(bcgo.PORT_CAST, bcnetgo.HandleCast)
+	go bcnetgo.Bind(bcgo.PORT_CAST, bcnetgo.HandleCastPort)
 
 	// Serve Web Requests
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", bcnetgo.HandleStatic)
 	mux.HandleFunc("/alias", bcnetgo.HandleAlias)
+	mux.HandleFunc("/alias-register", bcnetgo.HandleAliasRegister)
+	mux.HandleFunc("/block", bcnetgo.HandleBlock)
+	mux.HandleFunc("/channel", bcnetgo.HandleChannel)
 	mux.HandleFunc("/mining/file", CreateMiningHandler(func(record *bcgo.Record) (*bcgo.Channel, error) {
 		// Space-File-<creator-alias>
 		return bcgo.OpenChannel(spacego.SPACE_PREFIX_FILE + record.Creator)
@@ -77,8 +80,8 @@ func main() {
 		return bcgo.OpenChannel(spacego.SPACE_PREFIX_TAG + base64.RawURLEncoding.EncodeToString(record.Reference[0].RecordHash)) // TODO handle all References
 	}))
 	mux.HandleFunc("/stripe-webhook", HandleStripeWebhook)
-	mux.HandleFunc("/register", HandleRegister)
-	mux.HandleFunc("/subscribe", HandleSubscribe)
+	mux.HandleFunc("/space-register", HandleRegister)
+	mux.HandleFunc("/space-subscribe", HandleSubscribe)
 	store, err := bcnetgo.GetSecurityStore()
 	if err != nil {
 		log.Println(err)
@@ -124,7 +127,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
 			publicKey = results[0]
 		}
 		log.Println("PublicKey", publicKey)
-		t, err := template.ParseFiles("html/template/register.html")
+		t, err := template.ParseFiles("html/template/space-register.html")
 		if err != nil {
 			log.Println(err)
 			return
@@ -251,7 +254,7 @@ func HandleSubscribe(w http.ResponseWriter, r *http.Request) {
 			id = results[0]
 		}
 		log.Println("Customer ID", id)
-		t, err := template.ParseFiles("html/template/subscribe.html")
+		t, err := template.ParseFiles("html/template/space-subscribe.html")
 		if err != nil {
 			log.Println(err)
 			return
