@@ -416,8 +416,10 @@ func CreateMiningHandler(lookup func(*bcgo.Record) (*bcgo.Channel, error)) func(
 			// Get Subscription for Alias
 			subscription, err := financego.GetSubscriptionSync(subscriptions, node.Alias, node.Key, request.Creator)
 			if err != nil {
+				// Divide bytes by 1000000 = $0.01 per Mb
+				amount := int64(size) / 1000000
 				// Charge Customer
-				stripeCharge, bcCharge, err := financego.NewCustomerCharge(customer, int64(size), fmt.Sprintf("Aletheia Ware LLC Mining Charge %dbytes", size))
+				stripeCharge, bcCharge, err := financego.NewCustomerCharge(customer, amount, fmt.Sprintf("Aletheia Ware LLC Mining Charge %dbytes", size))
 				if err != nil {
 					log.Println(err)
 					return
