@@ -30,6 +30,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"path"
@@ -51,6 +52,9 @@ func main() {
 	// Serve Block Updates
 	// TODO only store blocks from registered customers in allowed channels (alias, file, meta, share, preview)
 	go bcnetgo.Bind(bcgo.PORT_CAST, bcnetgo.HandleCastPort)
+
+	// Redirect HTTP Requests to HTTPS
+	go http.ListenAndServe(":80", http.HandlerFunc(bcnetgo.HTTPSRedirect))
 
 	// Serve Web Requests
 	mux := http.NewServeMux()
@@ -88,10 +92,7 @@ func main() {
 		return
 	}
 	// Serve HTTPS Requests
-	log.Fatal(http.ListenAndServeTLS(":443", path.Join(store, "fullchain.pem"), path.Join(store, "privkey.pem"), mux))
-
-	// TODO Redirect HTTP Requests to HTTPS
-	// log.Fatal(http.ListenAndServe(":80", http.HandlerFunc(bcnetgo.HTTPSRedirect)))
+	http.ListenAndServeTLS(":443", path.Join(store, "fullchain.pem"), path.Join(store, "privkey.pem"), mux)
 }
 
 func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
@@ -195,7 +196,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
 			}
 			log.Println("Access", acl)
 
-			stripeCustomer, bcCustomer, err := financego.NewCustomer(alias[0], stripeEmail[0], stripeToken[0], "Aletheia Ware LLC Mining Service Customer")
+			stripeCustomer, bcCustomer, err := financego.NewCustomer(alias[0], stripeEmail[0], stripeToken[0], "Space Customer")
 			if err != nil {
 				log.Println(err)
 				return
@@ -420,9 +421,9 @@ func CreateMiningHandler(lookup func(*bcgo.Record) (*bcgo.Channel, error)) func(
 			subscription, err := financego.GetSubscriptionSync(subscriptions, node.Alias, node.Key, request.Creator)
 			if err != nil {
 				// Divide bytes by 1000000 = $0.01 per Mb
-				amount := int64(size) / 1000000
+				amount := int64(math.Ceil(float64(size) / 1000000.0))
 				// Charge Customer
-				stripeCharge, bcCharge, err := financego.NewCustomerCharge(customer, amount, fmt.Sprintf("Aletheia Ware LLC Mining Charge %dbytes", size))
+				stripeCharge, bcCharge, err := financego.NewCustomerCharge(customer, amount, fmt.Sprintf("Space Remote Mining Charge %dbytes", size))
 				if err != nil {
 					log.Println(err)
 					return
