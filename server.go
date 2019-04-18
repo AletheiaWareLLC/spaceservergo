@@ -20,6 +20,7 @@ import (
 	"bufio"
 	"crypto/rsa"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/AletheiaWareLLC/aliasgo"
 	"github.com/AletheiaWareLLC/bcgo"
@@ -92,7 +93,7 @@ func main() {
 		return
 	}
 	// Serve HTTPS Requests
-	http.ListenAndServeTLS(":443", path.Join(store, "fullchain.pem"), path.Join(store, "privkey.pem"), mux)
+	log.Println(http.ListenAndServeTLS(":443", path.Join(store, "fullchain.pem"), path.Join(store, "privkey.pem"), mux))
 }
 
 func HandleStripeWebhook(w http.ResponseWriter, r *http.Request) {
@@ -196,7 +197,7 @@ func HandleRegister(w http.ResponseWriter, r *http.Request) {
 			}
 			log.Println("Access", acl)
 
-			stripeCustomer, bcCustomer, err := financego.NewCustomer(alias[0], stripeEmail[0], stripeToken[0], "Space Customer")
+			stripeCustomer, bcCustomer, err := financego.NewCustomer(alias[0], stripeEmail[0], stripeToken[0], "Space Customer: "+alias[0])
 			if err != nil {
 				log.Println(err)
 				return
@@ -410,6 +411,10 @@ func CreateMiningHandler(lookup func(*bcgo.Record) (*bcgo.Channel, error)) func(
 				log.Println(err)
 				return
 			}
+			if customer == nil {
+				log.Println(errors.New(request.Creator + " is not a customer"))
+				return
+			}
 
 			subscriptions, err := financego.OpenSubscriptionChannel()
 			if err != nil {
@@ -420,6 +425,10 @@ func CreateMiningHandler(lookup func(*bcgo.Record) (*bcgo.Channel, error)) func(
 			// Get Subscription for Alias
 			subscription, err := financego.GetSubscriptionSync(subscriptions, node.Alias, node.Key, request.Creator)
 			if err != nil {
+				log.Println(err)
+				return
+			}
+			if subscription == nil {
 				// Divide bytes by 1000000 = $0.01 per Mb
 				amount := int64(math.Ceil(float64(size) / 1000000.0))
 				// Charge Customer
