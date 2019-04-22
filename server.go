@@ -74,7 +74,17 @@ func main() {
 	}))
 	mux.HandleFunc("/mining/share", CreateMiningHandler(func(record *bcgo.Record) (*bcgo.Channel, error) {
 		// Space-Share-<receiver-alias>
-		return bcgo.OpenChannel(spacego.SPACE_PREFIX_SHARE + record.Access[0].Alias) // TODO handle all Accesses
+		if len(record.Access) == 0 {
+			// TODO share publicly
+		} else {
+			// Receiver alias is first access which is not creator
+			for _, a := range record.Access {
+				if a.Alias != record.Creator {
+					return bcgo.OpenChannel(spacego.SPACE_PREFIX_SHARE + a.Alias)
+				}
+			}
+		}
+		return nil, errors.New("Cannot determine share receiver alias from access")
 	}))
 	mux.HandleFunc("/mining/preview", CreateMiningHandler(func(record *bcgo.Record) (*bcgo.Channel, error) {
 		// Space-Preview-<meta-record-hash>
