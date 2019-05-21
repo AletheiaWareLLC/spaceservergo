@@ -60,7 +60,7 @@ Space
     rsync $GOPATH/bin/spaceclientgo-* your_server_alias@your_server_ip:~/space/html/static/
 
     # Initialize Space
-    ALIAS=your_server_alias CACHE=~/space/cache/ KEYSTORE=~/space/keys/ LOGSTORE=~/space/logs/ ~/space/html/static/spaceclient-linux-amd64 init
+    ALIAS=your_server_alias ROOT_DIRECTORY=~/space/ ~/space/html/static/spaceclient-linux-amd64 init
 
     # Allow spaceservergo to read security credentials
     chown -R your_server_alias:your_server_alias /etc/letsencrypt/
@@ -79,10 +79,8 @@ Service (Systemd)
     >STRIPE_WEB_HOOK_SECRET_KEY=ZZZZZZ
     >ALIAS=your_server_alias
     >PASSWORD='VWXYZ'
-    >CACHE=cache/
-    >KEYSTORE=keys/
-    >LOGSTORE=logs/
-    >SECURITYSTORE=/etc/letsencrypt/live/your_server_domain/
+    >ROOT_DIRECTORY=/home/your_server_alias/space/
+    >CERTIFICATE_DIRECTORY=/etc/letsencrypt/live/your_server_domain/
     >PEERS=space.aletheiaware.com,bc.aletheiaware.com
     >EOF
 
