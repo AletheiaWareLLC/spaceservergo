@@ -103,7 +103,7 @@ func main() {
 		log.Println(err)
 		return
 	}
-	mux.HandleFunc("/alias", aliasservergo.AliasHandler(aliases, cache, network, aliasTemplate))
+	mux.HandleFunc("/alias", aliasservergo.AliasHandler(aliases, cache, aliasTemplate))
 	aliasRegistrationTemplate, err := template.ParseFiles("html/template/alias-register.html")
 	if err != nil {
 		log.Println(err)
@@ -167,14 +167,22 @@ func main() {
 	}
 	publishableKey := os.Getenv("STRIPE_PUBLISHABLE_KEY")
 	mux.HandleFunc("/space-register", bcnetgo.RegistrationHandler(aliases, node, listener, registrationTemplate, publishableKey))
-	subscriptionTemplate, err := template.ParseFiles("html/template/space-subscribe.html")
+	subscriptionTemplate, err := template.ParseFiles("html/template/space-storage-subscribe.html")
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	productId := os.Getenv("STRIPE_PRODUCT_ID")
-	planId := os.Getenv("STRIPE_PLAN_ID")
-	mux.HandleFunc("/space-subscribe", bcnetgo.SubscriptionHandler(aliases, node, listener, subscriptionTemplate, productId, planId))
+	productId := os.Getenv("STRIPE_STORAGE_PRODUCT_ID")
+	planId := os.Getenv("STRIPE_STORAGE_PLAN_ID")
+	mux.HandleFunc("/space-storage-subscribe", bcnetgo.SubscriptionHandler(aliases, node, listener, subscriptionTemplate, productId, planId))
+	subscriptionTemplate, err = template.ParseFiles("html/template/space-mining-subscribe.html")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	productId = os.Getenv("STRIPE_MINING_PRODUCT_ID")
+	planId = os.Getenv("STRIPE_MINING_PLAN_ID")
+	mux.HandleFunc("/space-mining-subscribe", bcnetgo.SubscriptionHandler(aliases, node, listener, subscriptionTemplate, productId, planId))
 	certDir, err := bcgo.GetCertificateDirectory(rootDir)
 	if err != nil {
 		log.Println(err)
