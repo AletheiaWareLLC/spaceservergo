@@ -109,7 +109,7 @@ func main() {
 		log.Println(err)
 		return
 	}
-	mux.HandleFunc("/alias-register", aliasservergo.AliasRegistrationHandler(node, listener, aliasRegistrationTemplate))
+	mux.HandleFunc("/alias-register", aliasservergo.AliasRegistrationHandler(aliases, node, listener, aliasRegistrationTemplate))
 	blockTemplate, err := template.ParseFiles("html/template/block.html")
 	if err != nil {
 		log.Println(err)
@@ -129,15 +129,15 @@ func main() {
 	}
 	mux.HandleFunc("/channels", bcnetgo.ChannelListHandler(cache, network, channelListTemplate, node.GetChannels))
 	mux.HandleFunc("/keys", bcnetgo.KeyShareHandler(make(bcnetgo.KeyShareStore), 2*time.Minute))
-	mux.HandleFunc("/mining/file", MiningHandler(node, func(record *bcgo.Record) string {
+	mux.HandleFunc("/mining/file", MiningHandler(aliases, node, func(record *bcgo.Record) string {
 		// Space-File-<creator-alias>
 		return spacego.SPACE_PREFIX_FILE + record.Creator
 	}))
-	mux.HandleFunc("/mining/meta", MiningHandler(node, func(record *bcgo.Record) string {
+	mux.HandleFunc("/mining/meta", MiningHandler(aliases, node, func(record *bcgo.Record) string {
 		// Space-Meta-<creator-alias>
 		return spacego.SPACE_PREFIX_META + record.Creator
 	}))
-	mux.HandleFunc("/mining/share", MiningHandler(node, func(record *bcgo.Record) string {
+	mux.HandleFunc("/mining/share", MiningHandler(aliases, node, func(record *bcgo.Record) string {
 		// Space-Share-<receiver-alias>
 		if len(record.Access) == 0 {
 			// TODO share publicly
@@ -151,11 +151,11 @@ func main() {
 		}
 		return ""
 	}))
-	mux.HandleFunc("/mining/preview", MiningHandler(node, func(record *bcgo.Record) string {
+	mux.HandleFunc("/mining/preview", MiningHandler(aliases, node, func(record *bcgo.Record) string {
 		// Space-Preview-<meta-record-hash>
 		return spacego.SPACE_PREFIX_PREVIEW + base64.RawURLEncoding.EncodeToString(record.Reference[0].RecordHash) // TODO handle all References
 	}))
-	mux.HandleFunc("/mining/tag", MiningHandler(node, func(record *bcgo.Record) string {
+	mux.HandleFunc("/mining/tag", MiningHandler(aliases, node, func(record *bcgo.Record) string {
 		// Space-Tag-<meta-record-hash>
 		return spacego.SPACE_PREFIX_TAG + base64.RawURLEncoding.EncodeToString(record.Reference[0].RecordHash) // TODO handle all References
 	}))
@@ -166,7 +166,7 @@ func main() {
 		return
 	}
 	publishableKey := os.Getenv("STRIPE_PUBLISHABLE_KEY")
-	mux.HandleFunc("/space-register", bcnetgo.RegistrationHandler(node, listener, registrationTemplate, publishableKey))
+	mux.HandleFunc("/space-register", bcnetgo.RegistrationHandler(aliases, node, listener, registrationTemplate, publishableKey))
 	subscriptionTemplate, err := template.ParseFiles("html/template/space-subscribe.html")
 	if err != nil {
 		log.Println(err)
@@ -174,7 +174,7 @@ func main() {
 	}
 	productId := os.Getenv("STRIPE_PRODUCT_ID")
 	planId := os.Getenv("STRIPE_PLAN_ID")
-	mux.HandleFunc("/space-subscribe", bcnetgo.SubscriptionHandler(node, listener, subscriptionTemplate, productId, planId))
+	mux.HandleFunc("/space-subscribe", bcnetgo.SubscriptionHandler(aliases, node, listener, subscriptionTemplate, productId, planId))
 	certDir, err := bcgo.GetCertificateDirectory(rootDir)
 	if err != nil {
 		log.Println(err)
@@ -184,7 +184,7 @@ func main() {
 	log.Println(http.ListenAndServeTLS(":443", path.Join(certDir, "fullchain.pem"), path.Join(certDir, "privkey.pem"), mux))
 }
 
-func MiningHandler(node *bcgo.Node, getChannelName func(*bcgo.Record) string) func(http.ResponseWriter, *http.Request) {
+func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, getChannelName func(*bcgo.Record) string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.RemoteAddr, r.Proto, r.Method, r.Host, r.URL.Path)
 		log.Println(r.Header)
@@ -199,13 +199,8 @@ func MiningHandler(node *bcgo.Node, getChannelName func(*bcgo.Record) string) fu
 			size := proto.Size(record)
 			log.Println("Record", size, record.Creator)
 
-			aliases, err := node.GetChannel(aliasgo.ALIAS)
-			if err != nil {
-				log.Println(err)
-				return
-			}
 			// Get rsa.PublicKey for Alias
-			publicKey, err := aliasgo.GetPublicKey(aliases, node.Cache, node.Network, record.Creator)
+			publicKey, err := aliases.GetPublicKey(node.Cache, record.Creator)
 			if err != nil {
 				log.Println(err)
 				return
