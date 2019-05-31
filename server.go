@@ -34,6 +34,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"strings"
 	"time"
 )
 
@@ -89,7 +90,16 @@ func main() {
 	go bcnetgo.Bind(bcgo.PORT_GET_HEAD, bcnetgo.HeadPortHandler(cache, network))
 	// Serve Block Updates
 	go bcnetgo.Bind(bcgo.PORT_BROADCAST, bcnetgo.BroadcastPortHandler(cache, network, func(name string) (bcgo.Channel, error) {
-		return node.GetChannel(name)
+		channel, err := node.GetChannel(name)
+		if err != nil {
+			if strings.HasPrefix(name, spacego.SPACE_PREFIX) {
+				channel = bcgo.OpenAndLoadPoWChannel(name, bcgo.THRESHOLD_STANDARD, node.Cache, node.Network)
+				node.AddChannel(channel)
+			} else {
+				return nil, err
+			}
+		}
+		return channel, nil
 	}))
 
 	// Redirect HTTP Requests to HTTPS
@@ -129,15 +139,19 @@ func main() {
 	}
 	mux.HandleFunc("/channels", bcnetgo.ChannelListHandler(cache, network, channelListTemplate, node.GetChannels))
 	mux.HandleFunc("/keys", bcnetgo.KeyShareHandler(make(bcnetgo.KeyShareStore), 2*time.Minute))
-	mux.HandleFunc("/mining/file", MiningHandler(aliases, node, func(record *bcgo.Record) string {
+	storageProductId := os.Getenv("STRIPE_STORAGE_PRODUCT_ID")
+	storagePlanId := os.Getenv("STRIPE_STORAGE_PLAN_ID")
+	miningProductId := os.Getenv("STRIPE_MINING_PRODUCT_ID")
+	miningPlanId := os.Getenv("STRIPE_MINING_PLAN_ID")
+	mux.HandleFunc("/mining/file", MiningHandler(aliases, node, miningProductId, miningPlanId, func(record *bcgo.Record) string {
 		// Space-File-<creator-alias>
 		return spacego.SPACE_PREFIX_FILE + record.Creator
 	}))
-	mux.HandleFunc("/mining/meta", MiningHandler(aliases, node, func(record *bcgo.Record) string {
+	mux.HandleFunc("/mining/meta", MiningHandler(aliases, node, miningProductId, miningPlanId, func(record *bcgo.Record) string {
 		// Space-Meta-<creator-alias>
 		return spacego.SPACE_PREFIX_META + record.Creator
 	}))
-	mux.HandleFunc("/mining/share", MiningHandler(aliases, node, func(record *bcgo.Record) string {
+	mux.HandleFunc("/mining/share", MiningHandler(aliases, node, miningProductId, miningPlanId, func(record *bcgo.Record) string {
 		// Space-Share-<receiver-alias>
 		if len(record.Access) == 0 {
 			// TODO share publicly
@@ -151,11 +165,11 @@ func main() {
 		}
 		return ""
 	}))
-	mux.HandleFunc("/mining/preview", MiningHandler(aliases, node, func(record *bcgo.Record) string {
+	mux.HandleFunc("/mining/preview", MiningHandler(aliases, node, miningProductId, miningPlanId, func(record *bcgo.Record) string {
 		// Space-Preview-<meta-record-hash>
 		return spacego.SPACE_PREFIX_PREVIEW + base64.RawURLEncoding.EncodeToString(record.Reference[0].RecordHash) // TODO handle all References
 	}))
-	mux.HandleFunc("/mining/tag", MiningHandler(aliases, node, func(record *bcgo.Record) string {
+	mux.HandleFunc("/mining/tag", MiningHandler(aliases, node, miningProductId, miningPlanId, func(record *bcgo.Record) string {
 		// Space-Tag-<meta-record-hash>
 		return spacego.SPACE_PREFIX_TAG + base64.RawURLEncoding.EncodeToString(record.Reference[0].RecordHash) // TODO handle all References
 	}))
@@ -172,27 +186,46 @@ func main() {
 		log.Println(err)
 		return
 	}
-	productId := os.Getenv("STRIPE_STORAGE_PRODUCT_ID")
-	planId := os.Getenv("STRIPE_STORAGE_PLAN_ID")
-	mux.HandleFunc("/space-storage-subscribe", bcnetgo.SubscriptionHandler(aliases, node, listener, subscriptionTemplate, productId, planId))
+	mux.HandleFunc("/space-storage-subscribe", bcnetgo.SubscriptionHandler(aliases, node, listener, subscriptionTemplate, storageProductId, storagePlanId))
 	subscriptionTemplate, err = template.ParseFiles("html/template/space-mining-subscribe.html")
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	productId = os.Getenv("STRIPE_MINING_PRODUCT_ID")
-	planId = os.Getenv("STRIPE_MINING_PLAN_ID")
-	mux.HandleFunc("/space-mining-subscribe", bcnetgo.SubscriptionHandler(aliases, node, listener, subscriptionTemplate, productId, planId))
+	mux.HandleFunc("/space-mining-subscribe", bcnetgo.SubscriptionHandler(aliases, node, listener, subscriptionTemplate, miningProductId, miningPlanId))
 	certDir, err := bcgo.GetCertificateDirectory(rootDir)
 	if err != nil {
 		log.Println(err)
 		return
 	}
+	// Periodically measure storage usage per customer
+	ticker := time.NewTicker(5 * 24 * time.Hour) // Every 5 days
+	quiter := make(chan struct{})
+	defer close(quiter)
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				usage, err := cache.MeasureStorageUsage(spacego.SPACE_PREFIX)
+				if err != nil {
+					log.Println(err)
+					return
+				}
+				for k, v := range usage {
+					log.Println("Usage", k, ":", v)
+					// TODO create usage records (stripe + bc)
+				}
+			case <-quiter:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 	// Serve HTTPS Requests
 	log.Println(http.ListenAndServeTLS(":443", path.Join(certDir, "fullchain.pem"), path.Join(certDir, "privkey.pem"), mux))
 }
 
-func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, getChannelName func(*bcgo.Record) string) func(http.ResponseWriter, *http.Request) {
+func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, productId, planId string, getChannelName func(*bcgo.Record) string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.RemoteAddr, r.Proto, r.Method, r.Host, r.URL.Path)
 		log.Println(r.Header)
@@ -203,9 +236,28 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, getChannelNam
 				log.Println(err)
 				return
 			}
+			log.Println("Record", record.Creator)
 
 			size := proto.Size(record)
-			log.Println("Record", size, record.Creator)
+			log.Println("Size", size)
+
+			// Get Channel
+			name := getChannelName(record)
+			if name == "" {
+				log.Println("Could not get channel name from record")
+				return
+			}
+			channel, err := node.GetChannel(name)
+			if err != nil {
+				if strings.HasPrefix(name, spacego.SPACE_PREFIX) {
+					channel = bcgo.OpenAndLoadPoWChannel(name, bcgo.THRESHOLD_STANDARD, node.Cache, node.Network)
+					node.AddChannel(channel)
+				} else {
+					log.Println(err)
+					return
+				}
+			}
+			log.Println("Channel", name)
 
 			// Get rsa.PublicKey for Alias
 			publicKey, err := aliases.GetPublicKey(node.Cache, record.Creator)
@@ -242,7 +294,7 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, getChannelNam
 				log.Println(err)
 				return
 			}
-			subscription, err := financego.GetSubscriptionSync(subscriptions, node.Cache, node.Alias, node.Key, record.Creator)
+			subscription, err := financego.GetSubscriptionSync(subscriptions, node.Cache, node.Alias, node.Key, record.Creator, productId, planId)
 			if err != nil {
 				log.Println(err)
 				return
@@ -275,22 +327,15 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, getChannelNam
 				// TODO Mine bcUsageRecord into UsageChannel
 			}
 
-			// Lookup Channel
-			channel := bcgo.OpenAndLoadPoWChannel(getChannelName(record), bcgo.THRESHOLD_STANDARD, node.Cache, node.Network)
-			if channel == nil {
-				log.Println("Could not get channel for record: " + record.String())
-				return
-			}
-
 			// Write record to cache
-			reference, err := bcgo.WriteRecord(channel.GetName(), node.Cache, record)
+			reference, err := bcgo.WriteRecord(name, node.Cache, record)
 			if err != nil {
 				log.Println(err)
 				return
 			}
 
 			// Mine channel in goroutine
-			go func(c *bcgo.PoWChannel) {
+			go func(c bcgo.ThresholdChannel) {
 				_, _, err = node.Mine(c, nil)
 				if err != nil {
 					log.Println(err)
