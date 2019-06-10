@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <head>
+        <link rel="stylesheet" href="/styles.css">
+        <title>SPACE Usage - Aletheia Ware</title>
+    </head>
+
+    <body>
+        <div class="content">
+            <div class="header">
+                <a href="https://aletheiaware.com">
+                    <img src="/logo.svg" />
+                </a>
+            </div>
+
+            <h1>SPACE Usage</h1>
+
+            <h2>Environment</h2>
+            <p>
+                <ul>
+                    <li>
+                        <pre><code>$> ALIAS=alice ./space</code></pre>
+                        <p>Sets the alias for Space to load from the keystore.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ROOT_DIRECTORY=/tmp/foobar ./space</code></pre>
+                        <p>Sets the root directory for Space to use.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> CACHE_DIRECTORY=/tmp/cache ./space</code></pre>
+                        <p>Sets the directory for Space to use for caching.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> DEBUG=true ./space</code></pre>
+                        <p>Sets the debug flag for Space.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> KEYS_DIRECTORY=~/keys ./space</code></pre>
+                        <p>Sets the directory for Space to use for storing keys.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> CERTIFICATE_DIRECTORY=~/certificates ./space</code></pre>
+                        <p>Sets the directory for Space to use for storing certificates.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> LOG_DIRECTORY=/tmp/logs ./space</code></pre>
+                        <p>Sets the directory for Space to use for logging.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> PASSWORD=password1234 ./space</code></pre>
+                        <p>Sets the password for Space to unlock the private key from the keystore.</p>
+                        <p class="note">Note: This is NOT advisable as your password will be stored in the command history, it is more secure to enter your password at the prompt.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> PEERS=space.aletheiaware.com,foobar.com ./space</code></pre>
+                        <p>Sets the peers for Space to communicate with.</p>
+                    </li>
+                </ul>
+            </p>
+
+            <h2>Commands</h2>
+            <p>
+                <ul>
+                    <li>
+                        <pre><code>$> ./space</code></pre>
+                        <p>Displays usage.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space init </code></pre>
+                        <p>Initializes environment, generates keys, and registers alias.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space add [name] text/plain</code></pre>
+                        <p>Adds a new file with the given name, mime type, and contents read from stdin.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space add [name] text/plain foobar.txt</code></pre>
+                        <p>Adds a new file with the given name, mime type, and contents read from file.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space add-remote foo text/plain</code></pre>
+                        <p>Add a new file with the given name, mime type, and contents read from stdin using a Remote Mining Service to save your device battery.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space add-remote foo text/plain foobar.txt</code></pre>
+                        <p>Add a new file with the given name, mime type, and contents read from file using a Remote Mining Service to save your device battery.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space list </code></pre>
+                        <p>Displays a list of files in reverse-chronological order.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space show [hash]</code></pre>
+                        <p>Displays the metadata of the file with the given hash.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space showall text/plain</code></pre>
+                        <p>Shows all files with the given mime type.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space get [hash]</code></pre>
+                        <p>Gets file with the given hash and writes the data to stdout.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space get [hash] file</code></pre>
+                        <p>Gets file with the given hash and writes the data to the given file.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space tag [hash]</code></pre>
+                        <p>Displays the tags (if any) of the file with the given hash.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space share [hash] alice bob</code></pre>
+                        <p>Shares the file with the given hash with the given aliases.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space tag [hash] foo bar</code></pre>
+                        <p>Adds the tags to the file with the given hash.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space search foo bar</code></pre>
+                        <p>Displays the metadata of all files which match the given tags.</p>
+                    </li>
+                    <li>
+                        <pre><code>$> ./space preview [hash]</code></pre>
+                        <p>Displays the preview (if any) of the file with the given hash.</p>
+                    </li>
+                </ul>
+            </p>
+
+            <div class="footer">
+                <p>© 2019 Aletheia Ware LLC.  All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+</html>
