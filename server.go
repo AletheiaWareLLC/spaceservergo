@@ -77,8 +77,8 @@ func main() {
 
 	aliases := aliasgo.OpenAndLoadAliasChannel(cache, network)
 	node.AddChannel(aliases)
-	customers := financego.OpenAndLoadCustomerChannel(cache, network)
-	node.AddChannel(customers)
+	registrations := financego.OpenAndLoadRegistrationChannel(cache, network)
+	node.AddChannel(registrations)
 	subscriptions := financego.OpenAndLoadSubscriptionChannel(cache, network)
 	node.AddChannel(subscriptions)
 
@@ -199,7 +199,8 @@ func main() {
 		return
 	}
 	// Periodically measure storage usage per customer
-	ticker := time.NewTicker(5 * 24 * time.Hour) // Every 5 days
+	//ticker := time.NewTicker(5 * 24 * time.Hour) // Every 5 days
+	ticker := time.NewTicker(time.Hour) // Every hour
 	quiter := make(chan struct{})
 	defer close(quiter)
 	go func() {
@@ -272,19 +273,19 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, productId, pl
 				return
 			}
 
-			// Get Customer for Alias
-			customers, err := node.GetChannel(financego.CUSTOMER)
+			// Get Registration for Alias
+			registrations, err := node.GetChannel(financego.REGISTRATION)
 			if err != nil {
 				log.Println(err)
 				return
 			}
-			customer, err := financego.GetCustomerSync(customers, node.Cache, node.Alias, node.Key, record.Creator)
+			registration, err := financego.GetRegistrationSync(registrations, node.Cache, node.Alias, node.Key, record.Creator, nil)
 			if err != nil {
 				log.Println(err)
 				return
 			}
-			if customer == nil {
-				log.Println(errors.New(record.Creator + " is not a customer"))
+			if registration == nil {
+				log.Println(errors.New(record.Creator + " is not registered"))
 				return
 			}
 
@@ -294,7 +295,7 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, productId, pl
 				log.Println(err)
 				return
 			}
-			subscription, err := financego.GetSubscriptionSync(subscriptions, node.Cache, node.Alias, node.Key, record.Creator, productId, planId)
+			subscription, err := financego.GetSubscriptionSync(subscriptions, node.Cache, node.Alias, node.Key, record.Creator, nil, productId, planId)
 			if err != nil {
 				log.Println(err)
 				return
@@ -303,7 +304,7 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, productId, pl
 				// Divide bytes by 1000000 = $0.01 per Mb
 				amount := int64(math.Ceil(float64(size) / 1000000.0))
 				// Charge Customer
-				stripeCharge, bcCharge, err := financego.NewCustomerCharge(customer, amount, fmt.Sprintf("Space Remote Mining Charge %dbytes", size))
+				stripeCharge, bcCharge, err := financego.NewCustomerCharge(registration, amount, fmt.Sprintf("Space Remote Mining Charge %dbytes", size))
 				if err != nil {
 					log.Println(err)
 					return
@@ -313,11 +314,11 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, productId, pl
 				// TODO Mine bcCharge into ChargeChannel
 			} else {
 				// Log Subscription Usage
-				if customer.CustomerId != subscription.CustomerId {
-					log.Println("Customer ID doesn't match Subscription Customer ID")
+				if registration.CustomerId != subscription.CustomerId {
+					log.Println("Registration Customer ID doesn't match Subscription Customer ID")
 					return
 				}
-				stripeUsageRecord, bcUsageRecord, err := financego.NewUsageRecord(record.Creator, subscription.SubscriptionItemId, time.Now().Unix(), int64(size))
+				stripeUsageRecord, bcUsageRecord, err := financego.NewUsageRecord(node.Alias, record.Creator, subscription.SubscriptionItemId, time.Now().Unix(), int64(size))
 				if err != nil {
 					log.Println(err)
 					return
