@@ -32,7 +32,7 @@
                 </ul>
             </p>
 
-            <p>For example; external storage drives are cheaper than ever and can store huge amounts of data. However, you need to carry them around with you and if they get damaged, lost, or stolen your data is gone. Alternatively, cloud storage allows you to access your data from anywhere as long as you have an internet connection. But the provider is able to read and modify your data without your knowledge.</p>
+            <p>For example; external storage drives are cheaper than ever and can store huge amounts of data. However, you need to carry them around with you and if they get damaged, lost, or stolen your data is gone. Alternatively, cloud storage allows you to access your data from anywhere as long as you have an internet connection, but the provider is able to read and modify your data without your knowledge.</p>
 
             <p>Isn't there a simpler way? Yes - private & secure data storage using blockchains!</p>
 
@@ -79,13 +79,45 @@
 
             <p>When you create an Aletheia Ware account with a unique alias and a password of at least 12 characters, a 4096bit RSA public/private key pair is generated. Your alias and public key are registered with Aletheia Ware servers, and your private key is encrypted with your password and stored on your device - it does not leave your possession and therefore only you can decrypt your data.</p>
 
-            <p>Aletheia Ware does not store your password or private key and therefore, unlike cloud storage providers, cannot read your data. Instead, Space encrypts your data on your device using your public key before mining it into a blockchain and uploading it to the network. Upon download, Space decrypts your data on your device using your private key.</p>
+            <p>Aletheia Ware does not store your password or private key and therefore, unlike cloud storage providers, cannot read your data. Instead, Space encrypts your data on your device using your public key before uploading it to the network and mining it into a blockchain. Upon download, Space decrypts your data on your device using your private key.</p>
 
             <p>To prevent loss of access to your data in case your device gets damaged, lost, or stolen, Aletheia Ware recommends provisioning multiple devices (see Export & Import below) and making a hard copy of your key pair and storing it in a secure location such as a fire-proof safe, or bank vault.</p>
 
+            <p><a href="https://space.aletheiaware.com/space-register">Register</a> your account and provide the following information;
+                <ul>
+                    <li>Alias - registered to your public key and signed by your private key.</li>
+                    <li>Email - how you would like us to contact you.</li>
+                    <li>Billing Info - how you would like to pay (this information is handled and stored by <a href="https://stripe.com">Stripe</a>);
+                        <ul>
+                            <li>Card Holder Name</li>
+                            <li>Card Number</li>
+                            <li>Card Expiry Date</li>
+                            <li>Card Verification Code (CVC)</li>
+                            <li>Billing Address</li>
+                        </ul>
+                    </li>
+                </ul>
+            </p>
+
+            <h3>Remote Storage Service</h3>
+            <p>Store your data remotely with Aletheia Ware's <a href="https://aletheiaware.com/storage.html">Remote Storage Service</a>. Click <a href="https://space.aletheiaware.com/space-storage-subscribe">Subscribe</a> and provide the following information;
+                <ul>
+                    <li>Alias - registered to your public key and signed by your private key.</li>
+                    <li>Customer ID - associated with your alias when registering.</li>
+                </ul>
+            </p>
+
+            <h3>Remote Mining Service</h3>
+            <p>Save battery by mining remotely with Aletheia Ware's <a href="https://aletheiaware.com/mining.html">Remote Mining Service</a>. Click <a href="https://space.aletheiaware.com/space-mining-subscribe">Subscribe</a> and provide the following information;
+                <ul>
+                    <li>Alias - registered to your public key and signed by your private key.</li>
+                    <li>Customer ID - associated with your alias when registering.</li>
+                </ul>
+            </p>
+
             <h2>Encrypt & Upload</h2>
             <p>A 128bit AES key is generated and used to encrypt each file. The key itself is then encrypted with your public key, and, along with the encrypted file, either mined into the blockchain locally, or uploaded to Aletheia Ware's <a href="https://aletheiaware.com/mining.html">Remote Mining Service</a>.
-                <pre><code>$> ./space foobar text/plain foobar.txt</code></pre>
+                <pre><code>$> ./space add foobar text/plain foobar.txt</code></pre>
                 <samp>
                     Found keystore under /home/<strong>username</strong>/bc for <strong>username</strong>
                     <br/>
@@ -324,23 +356,6 @@
 
             <h2>Export & Import</h2>
             <p>Your public/private key pair can be exported to other devices giving you easy access to your data from any supported device. Provisioning your key pair on multiple devices can help prevent loss of access to your data in case one of your devices gets damaged, lost, or stolen.</p>
-
-            <h2>Remote Mining Service</h2>
-            <p>Save battery by mining remotely with Aletheia Ware's <a href="https://aletheiaware.com/mining.html">Remote Mining Service</a>. Click <a href="https://space.aletheiaware.com/subscription">Subscription</a> and provide the following information to register;
-                <ul>
-                    <li>Alias - registered to your public key and signed by your private key.</li>
-                    <li>Email - how you would like us to contact you.</li>
-                    <li>Billing Info - how you would like to pay (this information is handled and stored by <a href="https://stripe.com">Stripe</a>);
-                        <ul>
-                            <li>Card Holder Name</li>
-                            <li>Card Number</li>
-                            <li>Card Expiry Date</li>
-                            <li>Card Verification Code (CVC)</li>
-                            <li>Billing Address</li>
-                        </ul>
-                    </li>
-                </ul>
-            </p>
 
             <h2>More Information</h2>
             <p>

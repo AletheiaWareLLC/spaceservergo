@@ -44,7 +44,14 @@ func main() {
 		log.Println(err)
 		return
 	}
-	//log.Println("Root Dir:", rootDir)
+	log.Println("Root Directory:", rootDir)
+
+	certDir, err := bcgo.GetCertificateDirectory(rootDir)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Println("Certificate Directory:", certDir)
 
 	logFile, err := bcgo.SetupLogging(rootDir)
 	if err != nil {
@@ -52,14 +59,14 @@ func main() {
 		return
 	}
 	defer logFile.Close()
-	//log.Println("Log File:", logFile.Name())
+	log.Println("Log File:", logFile.Name())
 
 	cacheDir, err := bcgo.GetCacheDirectory(rootDir)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	//log.Println("Cache Dir:", cacheDir)
+	log.Println("Cache Directory:", cacheDir)
 
 	cache, err := bcgo.NewFileCache(cacheDir)
 	if err != nil {
@@ -67,7 +74,16 @@ func main() {
 		return
 	}
 
-	network := &bcgo.TcpNetwork{}
+	peers, err := bcgo.GetPeers(rootDir)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Println("Peers:", peers)
+
+	network := &bcgo.TcpNetwork{
+		Peers: peers,
+	}
 
 	node, err := bcgo.GetNode(rootDir, cache, network)
 	if err != nil {
@@ -75,11 +91,11 @@ func main() {
 		return
 	}
 
-	aliases := aliasgo.OpenAndLoadAliasChannel(cache, network)
+	aliases := aliasgo.OpenAndPullAliasChannel(cache, network)
 	node.AddChannel(aliases)
-	registrations := financego.OpenAndLoadRegistrationChannel(cache, network)
+	registrations := financego.OpenAndPullRegistrationChannel(cache, network)
 	node.AddChannel(registrations)
-	subscriptions := financego.OpenAndLoadSubscriptionChannel(cache, network)
+	subscriptions := financego.OpenAndPullSubscriptionChannel(cache, network)
 	node.AddChannel(subscriptions)
 
 	listener := &bcgo.PrintingMiningListener{os.Stdout}
@@ -193,11 +209,6 @@ func main() {
 		return
 	}
 	mux.HandleFunc("/space-mining-subscribe", bcnetgo.SubscriptionHandler(aliases, node, listener, subscriptionTemplate, miningProductId, miningPlanId))
-	certDir, err := bcgo.GetCertificateDirectory(rootDir)
-	if err != nil {
-		log.Println(err)
-		return
-	}
 	// Periodically measure storage usage per customer
 	//ticker := time.NewTicker(5 * 24 * time.Hour) // Every 5 days
 	ticker := time.NewTicker(time.Hour) // Every hour
@@ -259,6 +270,11 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, productId, pl
 				}
 			}
 			log.Println("Channel", name)
+
+			if err := bcgo.Pull(aliases, node.Cache, node.Network); err != nil {
+				log.Println(err)
+				return
+			}
 
 			// Get rsa.PublicKey for Alias
 			publicKey, err := aliases.GetPublicKey(node.Cache, record.Creator)
