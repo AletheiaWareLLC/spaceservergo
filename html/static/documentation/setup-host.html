@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <head>
+        <link rel="stylesheet" href="/styles.css">
+        <title>SPACE Host Setup - Aletheia Ware</title>
+    </head>
+
+    <body>
+        <div class="content">
+            <div class="header">
+                <a href="https://aletheiaware.com">
+                    <img src="/logo.svg" />
+                </a>
+            </div>
+
+            <h1>SPACE Host Setup</h1>
+
+            <p>This guide will demonstrate how to setup Space on a remote server, such as a Digital Ocean Droplet running Ubuntu 18.04 x64.</p>
+
+            <h2>Access</h2>
+            <p>Create a new droplet and ssh into the IP address<p>
+
+            <pre><code>
+                ssh root@your_server_ip
+            </code></pre>
+
+            <p>Create a new user in the sudoers group</p>
+
+            <pre><code>
+                # Create space user
+                adduser your_server_username
+
+                # Add space user to sudoers
+                usermod -aG sudo your_server_username
+            </code></pre>
+
+            <p>Configure DNS for your_server_domain to your_server_ip</p>
+
+            <h2>Firewall</h2>
+
+            <p>Install a firewall such as UFW and open the ports used by HTTP, HTTPS, and Space</p>
+
+            <pre><code>
+                # Install firewall
+                apt install ufw
+
+                # Allow http port
+                ufw allow 80
+
+                # Allow https port
+                ufw allow 443
+
+                # Allow space ports
+                ufw allow 22222
+                ufw allow 22322
+                ufw allow 23232
+
+                # Enable firewall
+                ufw enable
+            </code></pre>
+
+            <h2>HTTPS</h2>
+
+            <p>Use a Certificate Authority such as Let's Encrypt to generate a certificate</p>
+
+            <pre><code>
+                # Install certbot
+                apt install certbot
+
+                # Generate certificate
+                certbot certonly --standalone -d your_server_domain
+            </code></pre>
+
+            <h2>Payment Processor</h2>
+
+            <p>Create an account with a Payment Processor such as Stripe, and add two subscriptions (Mining + Storage).</p>
+
+            <h2>Space</h2>
+
+            <p>Create a directory</p>
+
+            <pre><code>
+                # Create space directory
+                mkdir -p /home/your_server_username/space/
+            </code></pre>
+
+            <p>Build Space and copy the files from your development machine to your server</p>
+
+            <pre><code>
+                # Copy server binary
+                rsync $GOPATH/bin/spaceservergo-linux-amd64 your_server_username@your_server_ip:~/space/
+
+                # Copy website content
+                rsync -r $GOPATH/src/github.com/AletheiaWareLLC/spaceservergo/html your_server_username@your_server_ip:~/space/
+
+                # Copy client binaries into website static content
+                rsync $GOPATH/bin/spaceclientgo-* your_server_username@your_server_ip:~/space/html/static/
+            </code></pre>
+
+            <p>Initialize Space with your_server_domain as the alias</p>
+
+            <pre><code>
+                ALIAS=your_server_domain ROOT_DIRECTORY=~/space/ ~/space/html/static/spaceclient-linux-amd64 init
+
+                # Allow spaceservergo to read security credentials
+                chown -R your_server_username:your_server_username /etc/letsencrypt/
+
+                # Allow spaceservergo to bind to port 443 (HTTPS)
+                # This is required each time the server binary is updated
+                setcap CAP_NET_BIND_SERVICE=+eip /home/your_server_username/space/spaceservergo-linux-amd64
+            </code></pre>
+
+            <p>Configure Space with your stripe information, alias, password, root directory, certificate directory, and list of peers</p>
+
+            <pre><code>
+                # Create space config
+                cat > /home/your_server_username/space/config <<EOF
+                >STRIPE_PUBLISHABLE_KEY=VVVVVV
+                >STRIPE_SECRET_KEY=WWWWWW
+                >STRIPE_PRODUCT_ID=XXXXXX
+                >STRIPE_PLAN_ID=YYYYYY
+                >STRIPE_WEB_HOOK_SECRET_KEY=ZZZZZZ
+                >ALIAS=your_server_domain
+                >PASSWORD='VWXYZ'
+                >ROOT_DIRECTORY=/home/your_server_username/space/
+                >CERTIFICATE_DIRECTORY=/etc/letsencrypt/live/your_server_domain/
+                >PEERS=space.aletheiaware.com,bc.aletheiaware.com
+                >EOF
+            </code></pre>
+
+            <h2>systemd</h2>
+
+            <p>Setup Space as a service which is started at boot</p>
+
+            <pre><code>
+                # Create space service
+                cat > /etc/systemd/system/space.service <<EOF
+                >[Unit]
+                >Description=Space Server
+                >[Service]
+                >User=your_server_username
+                >WorkingDirectory=/home/your_server_username/space
+                >EnvironmentFile=/home/your_server_username/space/config
+                >ExecStart=/home/your_server_username/space/spaceservergo-linux-amd64
+                >SuccessExitStatus=143
+                >TimeoutStopSec=10
+                >Restart=on-failure
+                >RestartSec=5
+                >[Install]
+                >WantedBy=multi-user.target
+                >EOF
+
+                # Reload daemon
+                systemctl daemon-reload
+
+                # Start service
+                systemctl start space
+
+                # Stop service
+                systemctl stop space
+
+                # Monitor service
+                journalctl -u space
+            </code></pre>
+
+            <div class="footer">
+                <p>© 2019 Aletheia Ware LLC.  All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+</html>

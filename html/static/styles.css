@@ -55,7 +55,7 @@ p {
     text-align: justify;
 }
 p.note {
-    background-color: lightgrey;
+    background-color: darkgrey;
     border: 1px solid white;
     border-radius: 10px;
     padding: 5px;
@@ -99,4 +99,22 @@ ul {
     max-width: 960px;
     margin: auto;
     padding: 10px;
+}
+.nav {
+    list-style-type: none;
+    margin: 0px;
+    padding: 0px;
+    text-align: center;
+}
+.nav li {
+    display: inline;
+}
+.nav a {
+    color: white;
+    display: inline-block;
+    padding: 8px;
+    text-decoration: none;
+}
+.nav a:hover {
+    color: lightgrey;
 }

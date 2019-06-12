@@ -210,22 +210,16 @@ func main() {
 	}
 	mux.HandleFunc("/space-mining-subscribe", bcnetgo.SubscriptionHandler(aliases, node, listener, subscriptionTemplate, miningProductId, miningPlanId))
 	// Periodically measure storage usage per customer
-	//ticker := time.NewTicker(5 * 24 * time.Hour) // Every 5 days
-	ticker := time.NewTicker(time.Hour) // Every hour
+	ticker := time.NewTicker(5 * 24 * time.Hour) // Every 5 days
 	quiter := make(chan struct{})
 	defer close(quiter)
 	go func() {
 		for {
 			select {
 			case <-ticker.C:
-				usage, err := cache.MeasureStorageUsage(spacego.SPACE_PREFIX)
-				if err != nil {
+				if err := MeasureStorageUsage(node, cache, storageProductId, storagePlanId); err != nil {
 					log.Println(err)
 					return
-				}
-				for k, v := range usage {
-					log.Println("Usage", k, ":", v)
-					// TODO create usage records (stripe + bc)
 				}
 			case <-quiter:
 				ticker.Stop()
@@ -248,13 +242,12 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, productId, pl
 				log.Println(err)
 				return
 			}
-			log.Println("Record", record.Creator)
-
 			size := proto.Size(record)
-			log.Println("Size", size)
+			log.Println("Record", record.Creator, size)
 
 			// Get Channel
 			name := getChannelName(record)
+			log.Println("Channel", name)
 			if name == "" {
 				log.Println("Could not get channel name from record")
 				return
@@ -269,7 +262,6 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, productId, pl
 					return
 				}
 			}
-			log.Println("Channel", name)
 
 			if err := bcgo.Pull(aliases, node.Cache, node.Network); err != nil {
 				log.Println(err)
@@ -370,4 +362,55 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, productId, pl
 			log.Println("Unsupported method", r.Method)
 		}
 	}
+}
+
+func MeasureStorageUsage(node *bcgo.Node, cache *bcgo.FileCache, productId, planId string) error {
+	usage, err := cache.MeasureStorageUsage(spacego.SPACE_PREFIX)
+	if err != nil {
+		return err
+	}
+	registrations, err := node.GetChannel(financego.REGISTRATION)
+	if err != nil {
+		return err
+	}
+	subscriptions, err := node.GetChannel(financego.SUBSCRIPTION)
+	if err != nil {
+		return err
+	}
+	for alias, size := range usage {
+		log.Println("Usage", alias, ":", size)
+		// Get Registration for Alias
+		registration, err := financego.GetRegistrationSync(registrations, node.Cache, node.Alias, node.Key, alias, nil)
+		if err != nil {
+			return err
+		}
+		if registration == nil {
+			log.Println(errors.New(alias + " is not registered but is storing " + bcgo.SizeToString(size)))
+			break
+		}
+
+		// Get Subscription for Alias
+		subscription, err := financego.GetSubscriptionSync(subscriptions, node.Cache, node.Alias, node.Key, alias, nil, productId, planId)
+		if err != nil {
+			return err
+		}
+		if subscription == nil {
+			log.Println(errors.New(alias + " is not subscribed but is storing " + bcgo.SizeToString(size)))
+			break
+		} else {
+			// Log Subscription Usage
+			if registration.CustomerId != subscription.CustomerId {
+				log.Println(errors.New("Registration Customer ID doesn't match Subscription Customer ID"))
+				break
+			}
+			stripeUsageRecord, bcUsageRecord, err := financego.NewUsageRecord(node.Alias, alias, subscription.SubscriptionItemId, time.Now().Unix(), int64(size))
+			if err != nil {
+				return err
+			}
+			log.Println("UsageRecord", stripeUsageRecord)
+			log.Println("UsageRecord", bcUsageRecord)
+			// TODO Mine bcUsageRecord into UsageChannel
+		}
+	}
+	return nil
 }
