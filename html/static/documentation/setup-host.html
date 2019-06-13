@@ -130,18 +130,20 @@
 
             <pre><code>
                 # Create space config
-                cat > /home/your_server_username/space/config <<EOF
-                >STRIPE_PUBLISHABLE_KEY=VVVVVV
-                >STRIPE_SECRET_KEY=WWWWWW
-                >STRIPE_PRODUCT_ID=XXXXXX
-                >STRIPE_PLAN_ID=YYYYYY
-                >STRIPE_WEB_HOOK_SECRET_KEY=ZZZZZZ
-                >ALIAS=your_server_domain
-                >PASSWORD='VWXYZ'
-                >ROOT_DIRECTORY=/home/your_server_username/space/
-                >CERTIFICATE_DIRECTORY=/etc/letsencrypt/live/your_server_domain/
-                >PEERS=space.aletheiaware.com,bc.aletheiaware.com
-                >EOF
+                nano /home/your_server_username/space/config
+
+                    STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+                    STRIPE_SECRET_KEY=your_stripe_secret_key
+                    STRIPE_STORAGE_PRODUCT_ID=your_stripe_storage_product_id
+                    STRIPE_STORAGE_PLAN_ID=your_stripe_storage_plan_id
+                    STRIPE_MINING_PRODUCT_ID=your_stripe_mining_product_id
+                    STRIPE_MINING_PLAN_ID=your_stripe_mining_plan_id
+                    STRIPE_WEB_HOOK_SECRET_KEY=your_stripe_web_hook_secret_key
+                    ALIAS=your_server_domain
+                    PASSWORD='your_password'
+                    ROOT_DIRECTORY=/home/your_server_username/space/
+                    CERTIFICATE_DIRECTORY=/etc/letsencrypt/live/your_server_domain/
+                    PEERS=space.aletheiaware.com,bc.aletheiaware.com
             </code></pre>
 
             <h2>systemd</h2>
@@ -150,21 +152,21 @@
 
             <pre><code>
                 # Create space service
-                cat > /etc/systemd/system/space.service <<EOF
-                >[Unit]
-                >Description=Space Server
-                >[Service]
-                >User=your_server_username
-                >WorkingDirectory=/home/your_server_username/space
-                >EnvironmentFile=/home/your_server_username/space/config
-                >ExecStart=/home/your_server_username/space/spaceservergo-linux-amd64
-                >SuccessExitStatus=143
-                >TimeoutStopSec=10
-                >Restart=on-failure
-                >RestartSec=5
-                >[Install]
-                >WantedBy=multi-user.target
-                >EOF
+                sudo nano /etc/systemd/system/space.service
+
+                    [Unit]
+                    Description=Space Server
+                    [Service]
+                    User=your_server_username
+                    WorkingDirectory=/home/your_server_username/space
+                    EnvironmentFile=/home/your_server_username/space/config
+                    ExecStart=/home/your_server_username/space/spaceservergo-linux-amd64
+                    SuccessExitStatus=143
+                    TimeoutStopSec=10
+                    Restart=on-failure
+                    RestartSec=5
+                    [Install]
+                    WantedBy=multi-user.target
 
                 # Reload daemon
                 systemctl daemon-reload
