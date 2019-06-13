@@ -75,6 +75,18 @@
                 certbot certonly --standalone -d your_server_domain
             </code></pre>
 
+            <h2>Cron</h2>
+
+            <p>Cron can be used to trigger certificate renewal</p>
+
+            <pre><code>
+                # Open cron editor
+                sudo crontab -e
+
+                # Renew certificate on the first day of the week
+                * * * * 0 sudo certbot renew --pre-hook "systemctl stop space" --post-hook "systemctl start space"
+            </code></pre>
+
             <h2>Payment Processor</h2>
 
             <p>Create an account with a Payment Processor such as Stripe, and add two subscriptions (Mining + Storage).</p>
