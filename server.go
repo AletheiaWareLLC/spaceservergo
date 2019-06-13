@@ -91,11 +91,31 @@ func main() {
 		return
 	}
 
-	aliases := aliasgo.OpenAndPullAliasChannel(cache, network)
+	aliases := aliasgo.OpenAliasChannel()
+	if err := bcgo.LoadHead(aliases, cache, network); err != nil {
+		log.Println(err)
+	}
+	if err := bcgo.Pull(aliases, cache, network); err != nil {
+		log.Println(err)
+	}
 	node.AddChannel(aliases)
-	registrations := financego.OpenAndPullRegistrationChannel(cache, network)
+
+	registrations := financego.OpenRegistrationChannel()
+	if err := bcgo.LoadHead(registrations, cache, network); err != nil {
+		log.Println(err)
+	}
+	if err := bcgo.Pull(registrations, cache, network); err != nil {
+		log.Println(err)
+	}
 	node.AddChannel(registrations)
-	subscriptions := financego.OpenAndPullSubscriptionChannel(cache, network)
+
+	subscriptions := financego.OpenSubscriptionChannel()
+	if err := bcgo.LoadHead(subscriptions, cache, network); err != nil {
+		log.Println(err)
+	}
+	if err := bcgo.Pull(subscriptions, cache, network); err != nil {
+		log.Println(err)
+	}
 	node.AddChannel(subscriptions)
 
 	listener := &bcgo.PrintingMiningListener{os.Stdout}
@@ -109,7 +129,13 @@ func main() {
 		channel, err := node.GetChannel(name)
 		if err != nil {
 			if strings.HasPrefix(name, spacego.SPACE_PREFIX) {
-				channel = bcgo.OpenAndLoadPoWChannel(name, bcgo.THRESHOLD_STANDARD, node.Cache, node.Network)
+				channel = bcgo.OpenPoWChannel(name, bcgo.THRESHOLD_STANDARD)
+				if err := bcgo.LoadHead(channel, node.Cache, node.Network); err != nil {
+					log.Println(err)
+				}
+				if err := bcgo.Pull(channel, node.Cache, node.Network); err != nil {
+					log.Println(err)
+				}
 				node.AddChannel(channel)
 			} else {
 				return nil, err
@@ -255,7 +281,13 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, productId, pl
 			channel, err := node.GetChannel(name)
 			if err != nil {
 				if strings.HasPrefix(name, spacego.SPACE_PREFIX) {
-					channel = bcgo.OpenAndLoadPoWChannel(name, bcgo.THRESHOLD_STANDARD, node.Cache, node.Network)
+					channel = bcgo.OpenPoWChannel(name, bcgo.THRESHOLD_STANDARD)
+					if err := bcgo.LoadHead(channel, node.Cache, node.Network); err != nil {
+						log.Println(err)
+					}
+					if err := bcgo.Pull(channel, node.Cache, node.Network); err != nil {
+						log.Println(err)
+					}
 					node.AddChannel(channel)
 				} else {
 					log.Println(err)
