@@ -22,19 +22,19 @@
             <p>This guide will demonstrate how to setup Space on a remote server, such as a Digital Ocean Droplet running Ubuntu 18.04 x64.</p>
 
             <h2>Access</h2>
-            <p>Create a new droplet and ssh into the IP address<p>
+            <p>Create a new server and ssh as root into the IP address<p>
 
             <pre><code>
                 ssh root@your_server_ip
             </code></pre>
 
-            <p>Create a new user in the sudoers group</p>
+            <p>Create a new user and add them to the sudoers group</p>
 
             <pre><code>
-                # Create space user
+                # Create user
                 adduser your_server_username
 
-                # Add space user to sudoers
+                # Add user to sudoers
                 usermod -aG sudo your_server_username
             </code></pre>
 
@@ -100,14 +100,29 @@
                 mkdir -p /home/your_server_username/space/
             </code></pre>
 
-            <p>Build Space and copy the files from your development machine to your server</p>
+            <p>Build Space on your development machine and copy the files to your server</p>
 
             <pre><code>
-                # Copy server binary
-                rsync $GOPATH/bin/spaceservergo-linux-amd64 your_server_username@your_server_ip:~/space/
+                # Build server
+                env GOOS=linux GOARCH=amd64 go build -o $GOPATH/bin/spaceservergo-linux-amd64 github.com/AletheiaWareLLC/spaceservergo
+
+                # Build clients
+                env GOOS=darwin GOARCH=386 go build -o $GOPATH/bin/spaceclientgo-darwin-386 github.com/AletheiaWareLLC/spaceclientgo
+                env GOOS=darwin GOARCH=amd64 go build -o $GOPATH/bin/spaceclientgo-darwin-amd64 github.com/AletheiaWareLLC/spaceclientgo
+                env GOOS=linux GOARCH=386 go build -o $GOPATH/bin/spaceclientgo-linux-386 github.com/AletheiaWareLLC/spaceclientgo
+                env GOOS=linux GOARCH=amd64 go build -o $GOPATH/bin/spaceclientgo-linux-amd64 github.com/AletheiaWareLLC/spaceclientgo
+                env GOOS=linux GOARCH=arm GOARM=5 go build -o $GOPATH/bin/spaceclientgo-linux-arm5 github.com/AletheiaWareLLC/spaceclientgo
+                env GOOS=linux GOARCH=arm GOARM=6 go build -o $GOPATH/bin/spaceclientgo-linux-arm6 github.com/AletheiaWareLLC/spaceclientgo
+                env GOOS=linux GOARCH=arm GOARM=7 go build -o $GOPATH/bin/spaceclientgo-linux-arm7 github.com/AletheiaWareLLC/spaceclientgo
+                env GOOS=linux GOARCH=arm64 go build -o $GOPATH/bin/spaceclientgo-linux-arm8 github.com/AletheiaWareLLC/spaceclientgo
+                env GOOS=windows GOARCH=386 go build -o $GOPATH/bin/spaceclientgo-windows-386.exe github.com/AletheiaWareLLC/spaceclientgo
+                env GOOS=windows GOARCH=amd64 go build -o $GOPATH/bin/spaceclientgo-windows-amd64.exe github.com/AletheiaWareLLC/spaceclientgo
 
                 # Copy website content
                 rsync -r $GOPATH/src/github.com/AletheiaWareLLC/spaceservergo/html your_server_username@your_server_ip:~/space/
+
+                # Copy server binary
+                rsync $GOPATH/bin/spaceservergo-linux-amd64 your_server_username@your_server_ip:~/space/
 
                 # Copy client binaries into website static content
                 rsync $GOPATH/bin/spaceclientgo-* your_server_username@your_server_ip:~/space/html/static/
@@ -126,7 +141,7 @@
                 setcap CAP_NET_BIND_SERVICE=+eip /home/your_server_username/space/spaceservergo-linux-amd64
             </code></pre>
 
-            <p>Configure Space with your stripe information, alias, password, root directory, certificate directory, and list of peers</p>
+            <p>Configure Space with your Stripe information, alias, password, root directory, certificate directory, and list of peers</p>
 
             <pre><code>
                 # Create space config
@@ -170,6 +185,9 @@
 
                 # Reload daemon
                 systemctl daemon-reload
+
+                # Enable service
+                systemctl enable space
 
                 # Start service
                 systemctl start space

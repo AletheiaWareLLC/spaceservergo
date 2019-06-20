@@ -118,3 +118,17 @@ ul {
 .nav a:hover {
     color: lightgrey;
 }
+.price-table {
+    border-spacing: 20px 10px;
+    empty-cells: hide;
+    margin: auto;
+}
+.price-table td {
+    padding: 0px 10px;
+}
+.price-table th {
+    border-bottom: 1px solid white;
+}
+.price-table tbody {
+    text-align: center;
+}
