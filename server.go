@@ -223,18 +223,18 @@ func main() {
 	}
 	publishableKey := os.Getenv("STRIPE_PUBLISHABLE_KEY")
 	mux.HandleFunc("/space-register", bcnetgo.RegistrationHandler(aliases, node, listener, registrationTemplate, publishableKey))
-	subscriptionTemplate, err := template.ParseFiles("html/template/space-storage-subscribe.html")
+	subscriptionTemplate, err := template.ParseFiles("html/template/space-subscribe-storage.html")
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	mux.HandleFunc("/space-storage-subscribe", bcnetgo.SubscriptionHandler(aliases, node, listener, subscriptionTemplate, storageProductId, storagePlanId))
-	subscriptionTemplate, err = template.ParseFiles("html/template/space-mining-subscribe.html")
+	mux.HandleFunc("/space-subscribe-storage", bcnetgo.SubscriptionHandler(aliases, node, listener, subscriptionTemplate, "/subscribed-storage.html", storageProductId, storagePlanId))
+	subscriptionTemplate, err = template.ParseFiles("html/template/space-subscribe-mining.html")
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	mux.HandleFunc("/space-mining-subscribe", bcnetgo.SubscriptionHandler(aliases, node, listener, subscriptionTemplate, miningProductId, miningPlanId))
+	mux.HandleFunc("/space-subscribe-mining", bcnetgo.SubscriptionHandler(aliases, node, listener, subscriptionTemplate, "/subscribed-mining.html", miningProductId, miningPlanId))
 	// Periodically measure storage usage per customer
 	ticker := time.NewTicker(5 * 24 * time.Hour) // Every 5 days
 	quiter := make(chan struct{})
