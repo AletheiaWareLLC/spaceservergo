@@ -155,7 +155,7 @@ func main() {
 		log.Println(err)
 		return
 	}
-	mux.HandleFunc("/alias", aliasservergo.AliasHandler(aliases, cache, aliasTemplate))
+	mux.HandleFunc("/alias", aliasservergo.AliasHandler(aliases, cache, network, aliasTemplate))
 	aliasRegistrationTemplate, err := template.ParseFiles("html/template/alias-register.html")
 	if err != nil {
 		log.Println(err)
@@ -297,11 +297,10 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, productId, pl
 
 			if err := bcgo.Pull(aliases, node.Cache, node.Network); err != nil {
 				log.Println(err)
-				return
 			}
 
 			// Get rsa.PublicKey for Alias
-			publicKey, err := aliases.GetPublicKey(node.Cache, record.Creator)
+			publicKey, err := aliases.GetPublicKey(node.Cache, node.Network, record.Creator)
 			if err != nil {
 				log.Println(err)
 				return
@@ -319,7 +318,7 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, productId, pl
 				log.Println(err)
 				return
 			}
-			registration, err := financego.GetRegistrationSync(registrations, node.Cache, node.Alias, node.Key, record.Creator, nil)
+			registration, err := financego.GetRegistrationSync(registrations, node.Cache, node.Network, node.Alias, node.Key, record.Creator, nil)
 			if err != nil {
 				log.Println(err)
 				return
@@ -335,7 +334,7 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, productId, pl
 				log.Println(err)
 				return
 			}
-			subscription, err := financego.GetSubscriptionSync(subscriptions, node.Cache, node.Alias, node.Key, record.Creator, nil, productId, planId)
+			subscription, err := financego.GetSubscriptionSync(subscriptions, node.Cache, node.Network, node.Alias, node.Key, record.Creator, nil, productId, planId)
 			if err != nil {
 				log.Println(err)
 				return
@@ -412,7 +411,7 @@ func MeasureStorageUsage(node *bcgo.Node, cache *bcgo.FileCache, productId, plan
 	for alias, size := range usage {
 		log.Println("Usage", alias, ":", size)
 		// Get Registration for Alias
-		registration, err := financego.GetRegistrationSync(registrations, node.Cache, node.Alias, node.Key, alias, nil)
+		registration, err := financego.GetRegistrationSync(registrations, node.Cache, node.Network, node.Alias, node.Key, alias, nil)
 		if err != nil {
 			return err
 		}
@@ -422,7 +421,7 @@ func MeasureStorageUsage(node *bcgo.Node, cache *bcgo.FileCache, productId, plan
 		}
 
 		// Get Subscription for Alias
-		subscription, err := financego.GetSubscriptionSync(subscriptions, node.Cache, node.Alias, node.Key, alias, nil, productId, planId)
+		subscription, err := financego.GetSubscriptionSync(subscriptions, node.Cache, node.Network, node.Alias, node.Key, alias, nil, productId, planId)
 		if err != nil {
 			return err
 		}
