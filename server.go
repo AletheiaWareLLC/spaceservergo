@@ -46,13 +46,6 @@ func main() {
 	}
 	log.Println("Root Directory:", rootDir)
 
-	certDir, err := bcgo.GetCertificateDirectory(rootDir)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	log.Println("Certificate Directory:", certDir)
-
 	logFile, err := bcgo.SetupLogging(rootDir)
 	if err != nil {
 		log.Println(err)
@@ -60,6 +53,13 @@ func main() {
 	}
 	defer logFile.Close()
 	log.Println("Log File:", logFile.Name())
+
+	certDir, err := bcgo.GetCertificateDirectory(rootDir)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	log.Println("Certificate Directory:", certDir)
 
 	cacheDir, err := bcgo.GetCacheDirectory(rootDir)
 	if err != nil {
@@ -94,17 +94,23 @@ func main() {
 	aliases := aliasgo.OpenAliasChannel()
 	if err := bcgo.LoadHead(aliases, cache, network); err != nil {
 		log.Println(err)
-	}
-	if err := bcgo.Pull(aliases, cache, network); err != nil {
+	} else if err := bcgo.Pull(aliases, cache, network); err != nil {
 		log.Println(err)
 	}
 	node.AddChannel(aliases)
 
+	charges := financego.OpenChargeChannel()
+	if err := bcgo.LoadHead(charges, cache, network); err != nil {
+		log.Println(err)
+	} else if err := bcgo.Pull(charges, cache, network); err != nil {
+		log.Println(err)
+	}
+	node.AddChannel(charges)
+
 	registrations := financego.OpenRegistrationChannel()
 	if err := bcgo.LoadHead(registrations, cache, network); err != nil {
 		log.Println(err)
-	}
-	if err := bcgo.Pull(registrations, cache, network); err != nil {
+	} else if err := bcgo.Pull(registrations, cache, network); err != nil {
 		log.Println(err)
 	}
 	node.AddChannel(registrations)
@@ -112,11 +118,18 @@ func main() {
 	subscriptions := financego.OpenSubscriptionChannel()
 	if err := bcgo.LoadHead(subscriptions, cache, network); err != nil {
 		log.Println(err)
-	}
-	if err := bcgo.Pull(subscriptions, cache, network); err != nil {
+	} else if err := bcgo.Pull(subscriptions, cache, network); err != nil {
 		log.Println(err)
 	}
 	node.AddChannel(subscriptions)
+
+	usageRecords := financego.OpenUsageRecordChannel()
+	if err := bcgo.LoadHead(usageRecords, cache, network); err != nil {
+		log.Println(err)
+	} else if err := bcgo.Pull(usageRecords, cache, network); err != nil {
+		log.Println(err)
+	}
+	node.AddChannel(usageRecords)
 
 	listener := &bcgo.PrintingMiningListener{os.Stdout}
 
