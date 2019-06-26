@@ -198,15 +198,15 @@ func main() {
 	storagePlanId := os.Getenv("STRIPE_STORAGE_PLAN_ID")
 	miningProductId := os.Getenv("STRIPE_MINING_PRODUCT_ID")
 	miningPlanId := os.Getenv("STRIPE_MINING_PLAN_ID")
-	mux.HandleFunc("/mining/file", MiningHandler(aliases, node, miningProductId, miningPlanId, func(record *bcgo.Record) string {
+	mux.HandleFunc("/mining/file", MiningHandler(aliases, node, listener, miningProductId, miningPlanId, func(record *bcgo.Record) string {
 		// Space-File-<creator-alias>
 		return spacego.SPACE_PREFIX_FILE + record.Creator
 	}))
-	mux.HandleFunc("/mining/meta", MiningHandler(aliases, node, miningProductId, miningPlanId, func(record *bcgo.Record) string {
+	mux.HandleFunc("/mining/meta", MiningHandler(aliases, node, listener, miningProductId, miningPlanId, func(record *bcgo.Record) string {
 		// Space-Meta-<creator-alias>
 		return spacego.SPACE_PREFIX_META + record.Creator
 	}))
-	mux.HandleFunc("/mining/share", MiningHandler(aliases, node, miningProductId, miningPlanId, func(record *bcgo.Record) string {
+	mux.HandleFunc("/mining/share", MiningHandler(aliases, node, listener, miningProductId, miningPlanId, func(record *bcgo.Record) string {
 		// Space-Share-<receiver-alias>
 		if len(record.Access) == 0 {
 			// TODO share publicly
@@ -220,11 +220,11 @@ func main() {
 		}
 		return ""
 	}))
-	mux.HandleFunc("/mining/preview", MiningHandler(aliases, node, miningProductId, miningPlanId, func(record *bcgo.Record) string {
+	mux.HandleFunc("/mining/preview", MiningHandler(aliases, node, listener, miningProductId, miningPlanId, func(record *bcgo.Record) string {
 		// Space-Preview-<meta-record-hash>
 		return spacego.SPACE_PREFIX_PREVIEW + base64.RawURLEncoding.EncodeToString(record.Reference[0].RecordHash) // TODO handle all References
 	}))
-	mux.HandleFunc("/mining/tag", MiningHandler(aliases, node, miningProductId, miningPlanId, func(record *bcgo.Record) string {
+	mux.HandleFunc("/mining/tag", MiningHandler(aliases, node, listener, miningProductId, miningPlanId, func(record *bcgo.Record) string {
 		// Space-Tag-<meta-record-hash>
 		return spacego.SPACE_PREFIX_TAG + base64.RawURLEncoding.EncodeToString(record.Reference[0].RecordHash) // TODO handle all References
 	}))
@@ -270,7 +270,7 @@ func main() {
 	log.Println(http.ListenAndServeTLS(":443", path.Join(certDir, "fullchain.pem"), path.Join(certDir, "privkey.pem"), mux))
 }
 
-func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, productId, planId string, getChannelName func(*bcgo.Record) string) func(http.ResponseWriter, *http.Request) {
+func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, listener bcgo.MiningListener, productId, planId string, getChannelName func(*bcgo.Record) string) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.RemoteAddr, r.Proto, r.Method, r.Host, r.URL.Path)
 		log.Println(r.Header)
@@ -389,7 +389,7 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, productId, pl
 
 			// Mine channel in goroutine
 			go func(c bcgo.ThresholdChannel) {
-				_, _, err = node.Mine(c, nil)
+				_, _, err = node.Mine(c, listener)
 				if err != nil {
 					log.Println(err)
 					return
