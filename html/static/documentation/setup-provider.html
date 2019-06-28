@@ -19,7 +19,9 @@
 
             <h1>SPACE Provider Setup</h1>
 
-            <p>This guide will demonstrate how to setup Space on a remote server, such as a Digital Ocean Droplet running Ubuntu 18.04 x64.</p>
+            <p>This guide will demonstrate how to setup a <a href="/providers.html">Space Provider</a> on a remote server, such as a Digital Ocean Droplet running Ubuntu 18.04 x64.</p>
+
+            <!-- TODO <p>The steps below can also be performed by a <a href="">script</a>.</p> -->
 
             <h2>Access</h2>
             <p>Create a new server and ssh as root into the IP address<p>
@@ -36,9 +38,17 @@
 
                 # Add user to sudoers
                 usermod -aG sudo your_server_username
+
+                # Logout
+                exit
+
+                # Log back in as the new user
+                ssh your_server_username@your_server_ip
             </code></pre>
 
-            <p>Configure DNS for your_server_domain to your_server_ip</p>
+            <h2>DNS</h2>
+
+            <p>The exact steps to configure DNS will depend on your domain name registrar, but typically involve adding a new "A Record" to associate your_server_domain to your_server_ip.</p>
 
             <h2>Firewall</h2>
 
@@ -46,21 +56,21 @@
 
             <pre><code>
                 # Install firewall
-                apt install ufw
+                sudo apt install ufw
 
                 # Allow http port
-                ufw allow 80
+                sudo ufw allow 80
 
                 # Allow https port
-                ufw allow 443
+                sudo ufw allow 443
 
                 # Allow space ports
-                ufw allow 22222
-                ufw allow 22322
-                ufw allow 23232
+                sudo ufw allow 22222
+                sudo ufw allow 22322
+                sudo ufw allow 23232
 
                 # Enable firewall
-                ufw enable
+                sudo ufw enable
             </code></pre>
 
             <h2>HTTPS</h2>
@@ -69,13 +79,13 @@
 
             <pre><code>
                 # Install certbot
-                apt install certbot
+                sudo apt install certbot
 
                 # Generate certificate
-                certbot certonly --standalone -d your_server_domain
+                sudo certbot certonly --standalone -d your_server_domain
 
                 # Allow spaceservergo to read security credentials
-                chown -R your_server_username:your_server_username /etc/letsencrypt/live/your_server_domain/
+                sudo chown -R your_server_username:your_server_username /etc/letsencrypt/live/your_server_domain/
             </code></pre>
 
             <h2>Cron</h2>
@@ -121,7 +131,12 @@
 
             <p>Build Space on your development machine and copy the files to your server</p>
 
+            <p><a href="https://golang.org/doc/install">Install Go</a></p>
+
             <pre><code>
+                # Download Space Server
+                go get github.com/AletheiaWareLLC/spaceservergo
+
                 # Build server
                 env GOOS=linux GOARCH=amd64 go build -o $GOPATH/bin/spaceservergo-linux-amd64 github.com/AletheiaWareLLC/spaceservergo
 
@@ -136,6 +151,9 @@
                 env GOOS=linux GOARCH=arm64 go build -o $GOPATH/bin/spaceclientgo-linux-arm8 github.com/AletheiaWareLLC/spaceclientgo
                 env GOOS=windows GOARCH=386 go build -o $GOPATH/bin/spaceclientgo-windows-386.exe github.com/AletheiaWareLLC/spaceclientgo
                 env GOOS=windows GOARCH=amd64 go build -o $GOPATH/bin/spaceclientgo-windows-amd64.exe github.com/AletheiaWareLLC/spaceclientgo
+
+                # Install rsync
+                sudo apt install rsync
 
                 # Copy website content
                 rsync -r $GOPATH/src/github.com/AletheiaWareLLC/spaceservergo/html your_server_username@your_server_ip:~/space/
@@ -154,7 +172,7 @@
 
                 # Allow spaceservergo to bind to port 443 (HTTPS)
                 # This is required each time the server binary is updated
-                setcap CAP_NET_BIND_SERVICE=+eip /home/your_server_username/space/spaceservergo-linux-amd64
+                sudo setcap CAP_NET_BIND_SERVICE=+eip /home/your_server_username/space/spaceservergo-linux-amd64
             </code></pre>
 
             <p>Configure Space with your Stripe information, alias, password, root directory, certificate directory, and list of peers</p>
@@ -200,19 +218,19 @@
                     WantedBy=multi-user.target
 
                 # Reload daemon
-                systemctl daemon-reload
+                sudo systemctl daemon-reload
 
                 # Enable service
-                systemctl enable space
+                sudo systemctl enable space
 
                 # Start service
-                systemctl start space
+                sudo systemctl start space
 
                 # Stop service
-                systemctl stop space
+                sudo systemctl stop space
 
                 # Monitor service
-                journalctl -u space
+                sudo journalctl -u space
             </code></pre>
 
             <div class="footer">
