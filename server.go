@@ -249,7 +249,7 @@ func main() {
 	}
 	mux.HandleFunc("/space-subscribe-mining", bcnetgo.SubscriptionHandler(aliases, node, listener, subscriptionTemplate, "/subscribed-mining.html", miningProductId, miningPlanId))
 	// Periodically measure storage usage per customer
-	ticker := time.NewTicker(5 * 24 * time.Hour) // Every 5 days
+	ticker := time.NewTicker(24 * time.Hour) // Daily
 	quiter := make(chan struct{})
 	defer close(quiter)
 	go func() {
