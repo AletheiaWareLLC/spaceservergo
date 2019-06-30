@@ -389,8 +389,12 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, listener bcgo
 
 			// Mine channel in goroutine
 			go func(c bcgo.ThresholdChannel) {
-				_, _, err = node.Mine(c, listener)
-				if err != nil {
+				if _, _, err := node.Mine(c, listener); err != nil {
+					log.Println(err)
+					return
+				}
+				// TODO this pushes to server peers, also need to push to all providers the user is registered and subscribed with.
+				if err := bcgo.Push(c, node.Cache, node.Network); err != nil {
 					log.Println(err)
 					return
 				}
