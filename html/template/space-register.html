@@ -6,7 +6,7 @@
 
     <head>
         <link rel="stylesheet" href="styles.css">
-        <title>Space</title>
+        <title>S P A C E</title>
     </head>
 
     <body>
@@ -17,11 +17,9 @@
                 </a>
             </div>
 
-            <h1>Space</h1>
-            <p>Welcome to Space, please provide the following information to register;</p>
+            <h1>S P A C E</h1>
+            <p>Welcome, please provide your Alias and click Register;</p>
             <form action="space-register" method="POST">
-                Alias
-                <br>
                 <textarea name="alias" rows="1" cols="60">{{ .Alias }}</textarea>
                 <br>
                 <br>
@@ -35,6 +33,8 @@
                     data-panel-label="Register"
                     data-zip-code="true"></script>
             </form>
+
+            <p class="note">Note: This is one of our few webpages that uses Javascript, if you have disabled it, consider temporarily enabling it so the Stripe button can do its job. For more information see <a href="https://stripe.com/payments/checkout">Stripe Checkout</a>.</p>
 
             <div class="footer">
                 <p>© 2019 Aletheia Ware LLC.  All rights reserved.</p>
