@@ -78,6 +78,9 @@ table td {
 ul {
     color: white;
 }
+ol {
+    color: white;
+}
 .header {
     border-bottom: 1px solid white;
     overflow: hidden;
