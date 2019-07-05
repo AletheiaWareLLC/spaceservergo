@@ -19,11 +19,9 @@
 
             <h1>S P A C E</h1>
 
-            <p class="subtitle">End-to-End Encrypted, Blockchain-Backed, Digital Storage.</p>
+            <p class="subtitle">Secure, Private, Storage.</p>
 
             <img src="space.svg" width="100%" />
-
-            <p>In this digital age, more so than ever; knowledge is power, information is foresight, and data is money. You may not recognize the true value of your personal data until someone else has sold it - that free service you signed up for wasn't free at all. Would you rather pay a business for a service with currency or your personal data?</p>
 
             <p>When deciding how to store your personal notes, dog pictures, cat videos, music playlists, health records, bank statements, government documents, and other aspects of your digital life, consider the following three aspects;
                 <ul>
@@ -37,16 +35,13 @@
 
             <p>Isn't there a better way? Yes - indelible, immutable, private, and secure digital storage using blockchains!</p>
 
+            <embed src="space-illustration.svg" width="100%" />
+
             <p>Space encrypts your data and mines it into a blockchain ensuring: availability - your encrypted data is stored on a network spanning the globe and can be cached locally for offline access; confidentiality - your data can only be read after it is decrypted with a private key only you hold; integrity - a cryptographic signature of your encrypted data, and a cryptographic hash of the block it is mined into, ensure your data is indelible and immutable.</p>
 
-            <h2>Review & Approve</h2>
-            <p>Space is made available by <a href="https://aletheiaware.com">Aletheia Ware</a> under the <a href="https://aletheiaware.com/terms-of-service.html">Terms of Service</a> and <a href="https://aletheiaware.com/privacy-policy.html">Privacy Policy</a>.</p>
-            <p>Space is an open-source project released under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 License</a> and hosted on <a href="https://github.com/AletheiaWareLLC">Github</a>.</p>
-
-            <h2>Download & Install</h2>
             <p>Get Space for your devices;
                 <ul>
-                    <li>Android - <a href="https://play.google.com/apps/testing/com.aletheiaware.space.android">Open Beta - Google Play Store</a><!--<a href="https://play.google.com/store/apps/details?id=com.aletheiaware.space.android">Google Play Store</a>--></li>
+                    <li>Android - <a download href="SpaceAndroid.apk">APK</a> or <a href="https://play.google.com/apps/testing/com.aletheiaware.space.android">Open Beta - Google Play Store</a><!--<a href="https://play.google.com/store/apps/details?id=com.aletheiaware.space.android">Google Play Store</a>--></li>
                     <li>iOS - coming soon!<!--<a download href="Space"></a>--></li>
                     <li>JVM - coming soon!<!--<a download href="SpaceJVM.jar">JAR</a>--></li>
                     <li>Linux - ARM (<a download="space" href="spaceclientgo-linux-arm5">v5</a>, <a download="space" href="spaceclientgo-linux-arm6">v6</a>, <a download="space" href="spaceclientgo-linux-arm7">v7</a>, <a download="space" href="spaceclientgo-linux-arm8">v8</a>) or Intel/AMD (<a download="space" href="spaceclientgo-linux-386">32</a>, <a download="space" href="spaceclientgo-linux-amd64">64</a>)</li>
@@ -55,67 +50,8 @@
                 </ul>
             </p>
 
-            <h2>Generate & Initialize</h2>
-            <p>Choose a unique alias and a password of at least 12 characters and generate a 4096bit RSA key pair consisting of a public key (which will be registered with your account) and a private key (which does not leave your possession).</p>
-
-            <p>While your alias and public key are registered with Aletheia Ware servers, your private key is encrypted with your password and stored on your device - it does not leave your possession and therefore only you can decrypt your data.</p>
-
-            <p>Aletheia Ware does not store your password or private key and therefore, unlike cloud storage hosts, cannot read your data. Instead, Space encrypts your data on your device using your public key before uploading it to the network and mining it into a blockchain. Upon download, Space decrypts your data on your device using your private key.</p>
-
-            <p>To prevent loss of access to your data in case your device gets damaged, lost, or stolen, Aletheia Ware recommends provisioning multiple devices (see Export & Import below) and making a hard copy of your key pair and storing it in a secure location such as a fire-proof safe, or bank vault.</p>
-
-            <h2>Register & Subscribe</h2>
-            <p>Storage and Mining services are offered by <a href="/providers.html">Providers</a>, such as Aletheia Ware, to registered customers on a subscription basis.</p>
-
-            <p><a href="/space-register">Register</a> your account with Aletheia Ware by providing the following information;
-                <ul>
-                    <li>Alias - registered to your public key and signed by your private key.</li>
-                    <li>Email - how you would like us to contact you.</li>
-                    <li>Billing Info - how you would like to pay (this information is handled and stored by <a href="https://stripe.com">Stripe</a>);
-                        <ul>
-                            <li>Card Holder Name</li>
-                            <li>Card Number</li>
-                            <li>Card Expiry Date</li>
-                            <li>Card Verification Code (CVC)</li>
-                            <li>Billing Address</li>
-                        </ul>
-                    </li>
-                </ul>
-            </p>
-
-            <h3>Storage Service</h3>
-            <p>Store your data with Aletheia Ware's <a href="/storage.html">Storage Service</a>. Click <a href="/space-subscribe-storage">Subscribe</a> and provide the following information;
-                <ul>
-                    <li>Alias - registered to your public key and signed by your private key.</li>
-                    <li>Customer ID - associated with your alias when registering.</li>
-                </ul>
-            </p>
-
-            <h3>Mining Service</h3>
-            <p>Mine your data with Aletheia Ware's <a href="/mining.html">Mining Service</a>. Click <a href="/space-subscribe-mining">Subscribe</a> and provide the following information;
-                <ul>
-                    <li>Alias - registered to your public key and signed by your private key.</li>
-                    <li>Customer ID - associated with your alias when registering.</li>
-                </ul>
-            </p>
-
-            <h2>Encrypt & Upload</h2>
-            <p>A 128bit AES key is generated and used to encrypt each file. The key itself is then encrypted with your public key, and, along with the encrypted file, either mined into the blockchain locally, or uploaded to Aletheia Ware's <a href="/mining.html">Mining Service</a>.</p>
-
-            <h2>List & Show</h2>
-            <p>Each time a file is stored, a Meta object is also created which includes the time, file name, mime type, size, and references the file's encrypted data. The Meta object is also encrypted but mined into a different blockchain, allowing you to list your stored files and view information about them, without needing to sync the blockchain containing the file's encrypted data.</p>
-
-            <h2>Download & Decrypt</h2>
-            <p>After being mined, your encrypted data and associated key can be downloaded and decrypted using your private key.</p>
-
-            <h2>Tag & Search</h2>
-            <p>Organize files by tagging them and then searching by tag.</p>
-
-            <h2>Share & Receive</h2>
-            <p>Files you own can be shared with other aliases, and files shared with you can be listed, shown, tagged, searched, and downloaded just like your files.</p>
-
-            <h2>Export & Import</h2>
-            <p>Your public/private key pair can be exported to other devices giving you easy access to your data from any supported device. Provisioning your key pair on multiple devices can help prevent loss of access to your data in case one of your devices gets damaged, lost, or stolen.</p>
+            <p>Space is made available by <a href="https://aletheiaware.com">Aletheia Ware</a> under the <a href="https://aletheiaware.com/terms-of-service.html">Terms of Service</a> and <a href="https://aletheiaware.com/privacy-policy.html">Privacy Policy</a>.</p>
+            <p>Space is an open-source project released under the <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache 2.0 License</a> and hosted on <a href="https://github.com/AletheiaWareLLC">Github</a>.</p>
 
             <div class="footer">
                 <ul class="nav">
