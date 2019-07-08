@@ -353,8 +353,8 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, listener bcgo
 				return
 			}
 			if subscription == nil {
-				// Divide bytes by 1000000 = $0.01 per Mb
-				amount := int64(math.Ceil(float64(size) / 1000000.0))
+				// Divide bytes by 200000 = $0.05 per Mb
+				amount := int64(math.Ceil(float64(size) / 200000.0))
 				// Charge Customer
 				stripeCharge, bcCharge, err := financego.NewCustomerCharge(registration, amount, fmt.Sprintf("Space Remote Mining Charge %dbytes", size))
 				if err != nil {
