@@ -189,7 +189,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 	}
 	node.AddChannel(aliases)
 
-	charges := financego.OpenChargeChannel()
+	charges := spacego.OpenChargeChannel()
 	if err := bcgo.LoadHead(charges, s.Cache, s.Network); err != nil {
 		log.Println(err)
 	} else if err := bcgo.Pull(charges, s.Cache, s.Network); err != nil {
@@ -197,7 +197,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 	}
 	node.AddChannel(charges)
 
-	registrations := financego.OpenRegistrationChannel()
+	registrations := spacego.OpenRegistrationChannel()
 	if err := bcgo.LoadHead(registrations, s.Cache, s.Network); err != nil {
 		log.Println(err)
 	} else if err := bcgo.Pull(registrations, s.Cache, s.Network); err != nil {
@@ -205,7 +205,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 	}
 	node.AddChannel(registrations)
 
-	subscriptions := financego.OpenSubscriptionChannel()
+	subscriptions := spacego.OpenSubscriptionChannel()
 	if err := bcgo.LoadHead(subscriptions, s.Cache, s.Network); err != nil {
 		log.Println(err)
 	} else if err := bcgo.Pull(subscriptions, s.Cache, s.Network); err != nil {
@@ -213,7 +213,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 	}
 	node.AddChannel(subscriptions)
 
-	usageRecords := financego.OpenUsageRecordChannel()
+	usageRecords := spacego.OpenUsageRecordChannel()
 	if err := bcgo.LoadHead(usageRecords, s.Cache, s.Network); err != nil {
 		log.Println(err)
 	} else if err := bcgo.Pull(usageRecords, s.Cache, s.Network); err != nil {
@@ -297,14 +297,14 @@ func (s *Server) Start(node *bcgo.Node) error {
 		return err
 	}
 	publishableKey := os.Getenv("STRIPE_PUBLISHABLE_KEY")
-	mux.HandleFunc("/space-register", bcnetgo.RegistrationHandler(aliases, node, s.Listener, registrationTemplate, publishableKey))
+	mux.HandleFunc("/space-register", bcnetgo.RegistrationHandler(aliases, registrations, node, s.Listener, registrationTemplate, publishableKey))
 	subscriptionTemplate, err := template.ParseFiles("html/template/space-subscribe-storage.html")
 	if err != nil {
 		return err
 	}
 	storageProductId := os.Getenv("STRIPE_STORAGE_PRODUCT_ID")
 	storagePlanId := os.Getenv("STRIPE_STORAGE_PLAN_ID")
-	mux.HandleFunc("/space-subscribe-storage", bcnetgo.SubscriptionHandler(aliases, node, s.Listener, subscriptionTemplate, "/subscribed-storage.html", storageProductId, storagePlanId))
+	mux.HandleFunc("/space-subscribe-storage", bcnetgo.SubscriptionHandler(aliases, subscriptions, node, s.Listener, subscriptionTemplate, "/subscribed-storage.html", storageProductId, storagePlanId))
 	subscriptionTemplate, err = template.ParseFiles("html/template/space-subscribe-mining.html")
 	if err != nil {
 		return err
@@ -312,7 +312,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 	miningProductId := os.Getenv("STRIPE_MINING_PRODUCT_ID")
 	miningPlanId := os.Getenv("STRIPE_MINING_PLAN_ID")
 	if miningProductId != "" && miningPlanId != "" {
-		mux.HandleFunc("/space-subscribe-mining", bcnetgo.SubscriptionHandler(aliases, node, s.Listener, subscriptionTemplate, "/subscribed-mining.html", miningProductId, miningPlanId))
+		mux.HandleFunc("/space-subscribe-mining", bcnetgo.SubscriptionHandler(aliases, subscriptions, node, s.Listener, subscriptionTemplate, "/subscribed-mining.html", miningProductId, miningPlanId))
 		mux.HandleFunc("/mining/file", MiningHandler(aliases, node, s.Listener, miningProductId, miningPlanId, func(record *bcgo.Record) []string {
 			// Space-File-<creator-alias>
 			return []string{
@@ -591,7 +591,7 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, listener bcgo
 			}
 
 			// Get Registration for Alias
-			registrations, err := node.GetChannel(financego.REGISTRATION)
+			registrations, err := node.GetChannel(spacego.SPACE_REGISTRATION)
 			if err != nil {
 				log.Println(err)
 				return
@@ -607,7 +607,7 @@ func MiningHandler(aliases *aliasgo.AliasChannel, node *bcgo.Node, listener bcgo
 			}
 
 			// Get Subscription for Alias
-			subscriptions, err := node.GetChannel(financego.SUBSCRIPTION)
+			subscriptions, err := node.GetChannel(spacego.SPACE_SUBSCRIPTION)
 			if err != nil {
 				log.Println(err)
 				return
@@ -707,11 +707,11 @@ func MeasureStorageUsage(node *bcgo.Node, cache *bcgo.FileCache, productId, plan
 	if err != nil {
 		return err
 	}
-	registrations, err := node.GetChannel(financego.REGISTRATION)
+	registrations, err := node.GetChannel(spacego.SPACE_REGISTRATION)
 	if err != nil {
 		return err
 	}
-	subscriptions, err := node.GetChannel(financego.SUBSCRIPTION)
+	subscriptions, err := node.GetChannel(spacego.SPACE_SUBSCRIPTION)
 	if err != nil {
 		return err
 	}
