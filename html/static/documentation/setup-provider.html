@@ -167,7 +167,7 @@
             <p>Initialize Space with your_server_domain as the alias.</p>
 
             <pre><code>
-                ALIAS=your_server_domain ROOT_DIRECTORY=~/space/ PEERS=bc.aletheiaware.com ~/space/html/static/spaceclient-linux-amd64 init
+                ALIAS=your_server_domain ROOT_DIRECTORY=~/space/ PEERS=bc.aletheiaware.com ~/space/spaceserver-linux-amd64 init
 
                 # Allow spaceservergo to bind to port 443 (HTTPS)
                 # This is required each time the server binary is updated
@@ -208,7 +208,7 @@
                     User=your_server_username
                     WorkingDirectory=/home/your_server_username/space
                     EnvironmentFile=/home/your_server_username/space/config
-                    ExecStart=/home/your_server_username/space/spaceservergo-linux-amd64
+                    ExecStart=/home/your_server_username/space/spaceservergo-linux-amd64 start
                     SuccessExitStatus=143
                     TimeoutStopSec=10
                     Restart=on-failure
