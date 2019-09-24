@@ -22,16 +22,16 @@
             <h2>Generate & Initialize</h2>
             <p>Choose a unique alias and a password of at least 12 characters and generate a 4096bit RSA key pair consisting of a public key (which will be registered with your account) and a private key (which does not leave your possession).</p>
 
-            <p>While your alias and public key are registered with Aletheia Ware servers, your private key is encrypted with your password and stored on your device - it does not leave your possession and therefore only you can decrypt your data.</p>
+            <p>While your alias and public key are registered, your private key is encrypted with your password and stored on your device - it does not leave your possession and therefore only you can decrypt your data.</p>
 
             <p>Aletheia Ware does not store your password or private key and therefore, unlike cloud storage hosts, cannot read your data. Instead, Space encrypts your data on your device using your public key before uploading it to the network and mining it into a blockchain. Upon download, Space decrypts your data on your device using your private key.</p>
 
             <p>To prevent loss of access to your data in case your device gets damaged, lost, or stolen, Aletheia Ware recommends provisioning multiple devices (see Export & Import below) and making a hard copy of your key pair and storing it in a secure location such as a fire-proof safe, or bank vault.</p>
 
             <h2>Register & Subscribe</h2>
-            <p>Storage and Mining services are offered by <a href="/providers.html">Providers</a>, such as Aletheia Ware, to registered customers on a subscription basis.</p>
+            <p>Storage and Mining services are offered by to registered customers on a subscription basis.</p>
 
-            <p><a href="/space-register">Register</a> your account with Aletheia Ware by providing the following information;
+            <p><a href="/space-register">Register</a> your account by providing the following information;
                 <ul>
                     <li>Alias - registered to your public key and signed by your private key.</li>
                     <li>Email - how you would like us to contact you.</li>
@@ -48,7 +48,7 @@
             </p>
 
             <h3>Storage Service</h3>
-            <p>Store your data with Aletheia Ware's <a href="/storage.html">Storage Service</a>. Click <a href="/space-subscribe-storage">Subscribe</a> and provide the following information;
+            <p>Store your data with <a href="/registrars.html">Registrars</a>. Click <a href="/space-subscribe-storage">Subscribe</a> and provide the following information;
                 <ul>
                     <li>Alias - registered to your public key and signed by your private key.</li>
                     <li>Customer ID - associated with your alias when registering.</li>
@@ -56,7 +56,7 @@
             </p>
 
             <h3>Mining Service</h3>
-            <p>Mine your data with Aletheia Ware's <a href="/mining.html">Mining Service</a>. Click <a href="/space-subscribe-mining">Subscribe</a> and provide the following information;
+            <p>Mine your data with <a href="/miners.html">Miners</a>. Click <a href="/space-subscribe-mining">Subscribe</a> and provide the following information;
                 <ul>
                     <li>Alias - registered to your public key and signed by your private key.</li>
                     <li>Customer ID - associated with your alias when registering.</li>
@@ -64,7 +64,7 @@
             </p>
 
             <h2>Encrypt & Upload</h2>
-            <p>A 128bit AES key is generated and used to encrypt each file. The key itself is then encrypted with your public key, and, along with the encrypted file, either mined into the blockchain locally, or uploaded to Aletheia Ware's <a href="/mining.html">Mining Service</a>.</p>
+            <p>A 128bit AES key is generated and used to encrypt each file. The key itself is then encrypted with your public key, and, along with the encrypted file, either mined into the blockchain locally, or uploaded to a <a href="/miners.html">Remote Mining Service</a>.</p>
 
             <h2>List & Show</h2>
             <p>Each time a file is stored, a Meta object is created which includes the time, file name, mime type, size, and references the file's encrypted data. The Meta object is also encrypted but mined into a different blockchain, allowing you to list your stored files and view information about them, without needing to sync the blockchain containing the file's encrypted data.</p>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Language" content="en">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <head>
+        <link rel="stylesheet" href="styles.css">
+        <title>{{ .Alias }} - S P A C E</title>
+    </head>
+
+    <body>
+        <div class="content">
+            <div class="header">
+                <a href="https://aletheiaware.com">
+                    <img src="logo.svg" />
+                </a>
+            </div>
+
+            <h1>S P A C E</h1>
+
+            <table>
+                <tr>
+                    <td>Registrar</td>
+                    <td>{{ .Alias }}</td>
+                </tr>
+                <tr>
+                    <td>Domain</td>
+                    <td>{{ .Domain }}</td>
+                </tr>
+                <tr>
+                    <td>Country</td>
+                    <td>{{ .Country }}</td>
+                </tr>
+                <tr>
+                    <td>Currency</td>
+                    <td>{{ .Currency }}</td>
+                </tr>
+                <tr>
+                    <td>Group Price</td>
+                    <td>{{ .GroupPrice }}</td>
+                </tr>
+                <tr>
+                    <td>Group Size</td>
+                    <td>{{ .GroupSize }}</td>
+                </tr>
+                <tr>
+                    <td>Interval</td>
+                    <td>{{ .Interval }}</td>
+                </tr>
+                <tr>
+                    <td>Mode</td>
+                    <td>{{ .Mode }}</td>
+                </tr>
+            </table>
+
+            <p>The table below gives examples of the cost for different monthly usages.</p>
+
+            <table class="price-table">
+                <tr>
+                    <th>Usage</th>
+                    <th>Cost</th>
+                </tr>
+                {{ range $value := .CostExamples }}
+                <tr>
+                    <td>{{ index $value 0 }}</a></td>
+                    <td>{{ index $value 1 }}</td>
+                </tr>
+                {{ end }}
+            </table>
+
+            <p class="note">Note: If a subscribed customer's bill fails to meet Stripe's <a href="https://stripe.com/docs/currencies#minimum-and-maximum-charge-amounts">minimum charge amount</a> the customer will not be billed and the amount due will be rolled over into the next month's bill.</p>
+
+            <div class="footer">
+                <p>© 2019 Aletheia Ware LLC.  All rights reserved.</p>
+            </div>
+        </div>
+    </body>
+</html>

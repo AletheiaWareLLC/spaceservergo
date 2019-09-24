@@ -19,7 +19,7 @@
 
             <h1>Provider Setup</h1>
 
-            <p>This guide will demonstrate how to setup a <a href="/providers.html">Provider</a> on a remote server, such as a Digital Ocean Droplet running Ubuntu 18.04 x64.</p>
+            <p>This guide will demonstrate how to setup S P A C E on a remote server, such as a Digital Ocean Droplet running Ubuntu 18.04 x64.</p>
 
             <!-- TODO <p>The steps below can also be performed by a <a href="">script</a>.</p> -->
 
@@ -180,6 +180,8 @@
                 # Create space config
                 nano /home/your_server_username/space/config
 
+                    STRIPE_COUNTRY=US
+                    STRIPE_CURRENCY=usd
                     STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
                     STRIPE_SECRET_KEY=your_stripe_secret_key
                     STRIPE_STORAGE_PRODUCT_ID=your_stripe_storage_product_id

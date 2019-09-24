@@ -6,7 +6,7 @@
 
     <head>
         <link rel="stylesheet" href="styles.css">
-        <title>S P A C E - Mining Service - Aletheia Ware</title>
+        <title>{{ .Alias }} - S P A C E</title>
     </head>
 
     <body>
@@ -17,35 +17,56 @@
                 </a>
             </div>
 
-            <h1>Mining Service</h1>
+            <h1>S P A C E</h1>
 
-            <p>Aletheia Ware provides Mining Service on a metered rate of $0.05 per group of 1,000,000 bytes (1MB) per month up to a maximum of 2,000,000,000 bytes (2GB). The table below gives examples of the cost for different monthly usages.</p>
+            <table>
+                <tr>
+                    <td>Miner</td>
+                    <td>{{ .Alias }}</td>
+                </tr>
+                <tr>
+                    <td>Domain</td>
+                    <td>{{ .Domain }}</td>
+                </tr>
+                <tr>
+                    <td>Country</td>
+                    <td>{{ .Country }}</td>
+                </tr>
+                <tr>
+                    <td>Currency</td>
+                    <td>{{ .Currency }}</td>
+                </tr>
+                <tr>
+                    <td>Group Price</td>
+                    <td>{{ .GroupPrice }}</td>
+                </tr>
+                <tr>
+                    <td>Group Size</td>
+                    <td>{{ .GroupSize }}</td>
+                </tr>
+                <tr>
+                    <td>Interval</td>
+                    <td>{{ .Interval }}</td>
+                </tr>
+                <tr>
+                    <td>Mode</td>
+                    <td>{{ .Mode }}</td>
+                </tr>
+            </table>
+
+            <p>The table below gives examples of the cost for different monthly usages.</p>
 
             <table class="price-table">
                 <tr>
                     <th>Usage</th>
                     <th>Cost</th>
                 </tr>
+                {{ range $value := .CostExamples }}
                 <tr>
-                    <td>0 bytes</td>
-                    <td>$0.00</td>
+                    <td>{{ index $value 0 }}</a></td>
+                    <td>{{ index $value 1 }}</td>
                 </tr>
-                <tr>
-                    <td>800KB</td>
-                    <td>$0.05</td>
-                </tr>
-                <tr>
-                    <td>28MB</td>
-                    <td>$1.40</td>
-                </tr>
-                <tr>
-                    <td>564MB</td>
-                    <td>$28.20</td>
-                </tr>
-                <tr>
-                    <td>1.2GB</td>
-                    <td>$60.00</td>
-                </tr>
+                {{ end }}
             </table>
 
             <p>Registered customers using the Mining Service without a subscription will be charged on a per-use basis.</p>
