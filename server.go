@@ -85,11 +85,6 @@ func CreateMerchant(alias, domain, publishableKey string) *financego.Merchant {
 }
 
 func (s *Server) RegisterRegistrar(node *bcgo.Node, domain, country, currency, publishableKey, storageProductId, storagePlanId string, storagePriceGb uint64) (*spacego.Registrar, error) {
-	registrars, err := node.GetChannel(spacego.SPACE_REGISTRAR)
-	if err != nil {
-		return nil, err
-	}
-
 	// Create Registrar
 	registrar := &spacego.Registrar{
 		Merchant: CreateMerchant(node.Alias, domain, publishableKey),
@@ -130,7 +125,7 @@ func (s *Server) RegisterRegistrar(node *bcgo.Node, domain, country, currency, p
 	}
 
 	// Write Record
-	if err := Write(node, registrars, record, s.Listener); err != nil {
+	if err := Write(node, spacego.OpenRegistrarChannel(), record, s.Listener); err != nil {
 		return nil, err
 	}
 
@@ -138,11 +133,6 @@ func (s *Server) RegisterRegistrar(node *bcgo.Node, domain, country, currency, p
 }
 
 func (s *Server) RegisterMiner(node *bcgo.Node, domain, country, currency, publishableKey, miningProductId, miningPlanId string, miningPriceMb uint64) (*spacego.Miner, error) {
-	miners, err := node.GetChannel(spacego.SPACE_MINER)
-	if err != nil {
-		return nil, err
-	}
-
 	// Create Miner
 	miner := &spacego.Miner{
 		Merchant: CreateMerchant(node.Alias, domain, publishableKey),
@@ -183,7 +173,7 @@ func (s *Server) RegisterMiner(node *bcgo.Node, domain, country, currency, publi
 	}
 
 	// Write Record
-	if err := Write(node, miners, record, s.Listener); err != nil {
+	if err := Write(node, spacego.OpenMinerChannel(), record, s.Listener); err != nil {
 		return nil, err
 	}
 
