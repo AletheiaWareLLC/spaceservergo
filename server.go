@@ -202,9 +202,10 @@ func (s *Server) Start(node *bcgo.Node) error {
 		miners,
 	} {
 		// Load channel
-		if err := bcgo.LoadHead(c, s.Cache, s.Network); err != nil {
+		if err := bcgo.LoadCachedHead(c, s.Cache); err != nil {
 			log.Println(err)
-		} else if err := bcgo.Pull(c, s.Cache, s.Network); err != nil {
+		}
+		if err := bcgo.Pull(c, s.Cache, s.Network); err != nil {
 			log.Println(err)
 		}
 		// Add channel to node
@@ -221,7 +222,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 		if err != nil {
 			if strings.HasPrefix(name, spacego.SPACE_PREFIX) {
 				channel = bcgo.OpenPoWChannel(name, bcgo.THRESHOLD_STANDARD)
-				if err := bcgo.LoadHead(channel, s.Cache, s.Network); err != nil {
+				if err := bcgo.LoadCachedHead(channel, s.Cache); err != nil {
 					log.Println(err)
 				}
 				if err := bcgo.Pull(channel, s.Cache, s.Network); err != nil {
@@ -639,7 +640,7 @@ func MiningHandler(aliases *aliasgo.AliasChannel, charges *bcgo.PoWChannel, usag
 				if err != nil {
 					if strings.HasPrefix(name, spacego.SPACE_PREFIX) {
 						channel = bcgo.OpenPoWChannel(name, bcgo.THRESHOLD_STANDARD)
-						if err := bcgo.LoadHead(channel, node.Cache, node.Network); err != nil {
+						if err := bcgo.LoadCachedHead(channel, node.Cache); err != nil {
 							log.Println(err)
 						}
 						if err := bcgo.Pull(channel, node.Cache, node.Network); err != nil {
@@ -852,9 +853,10 @@ func MeasureStorageUsage(aliases *aliasgo.AliasChannel, registrations bcgo.Chann
 
 func Write(node *bcgo.Node, channel bcgo.ThresholdChannel, record *bcgo.Record, listener bcgo.MiningListener) error {
 	// Update Channel
-	if err := bcgo.LoadHead(channel, node.Cache, node.Network); err != nil {
+	if err := bcgo.LoadCachedHead(channel, node.Cache); err != nil {
 		log.Println(err)
-	} else if err := bcgo.Pull(channel, node.Cache, node.Network); err != nil {
+	}
+	if err := bcgo.Pull(channel, node.Cache, node.Network); err != nil {
 		log.Println(err)
 	}
 
