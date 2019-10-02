@@ -50,9 +50,11 @@ type Server struct {
 }
 
 func (s *Server) Init() (*bcgo.Node, error) {
-	// Add Space host to peers
-	if err := bcgo.AddPeer(s.Root, spacego.GetSpaceHost()); err != nil {
-		return nil, err
+	// Add Space hosts to peers
+	for _, host := range spacego.GetSpaceHosts() {
+		if err := bcgo.AddPeer(s.Root, host); err != nil {
+			return nil, err
+		}
 	}
 
 	// Add BC host to peers
