@@ -379,10 +379,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 		for {
 			select {
 			case <-ticker.C:
-				if err := MeasureStorageUsage(aliases, registrations, subscriptions, usageRecords, node, s.Cache, storageProductId, storagePlanId, s.Listener); err != nil {
-					log.Println(err)
-					return
-				}
+				MeasureStorageUsage(aliases, registrations, subscriptions, usageRecords, node, s.Cache, storageProductId, storagePlanId, s.Listener)
 			case <-quiter:
 				ticker.Stop()
 				return
@@ -778,10 +775,11 @@ func MiningHandler(aliases *aliasgo.AliasChannel, charges *bcgo.PoWChannel, usag
 	}
 }
 
-func MeasureStorageUsage(aliases *aliasgo.AliasChannel, registrations bcgo.Channel, subscriptions bcgo.Channel, usageRecords *bcgo.PoWChannel, node *bcgo.Node, cache *bcgo.FileCache, productId, planId string, listener bcgo.MiningListener) error {
+func MeasureStorageUsage(aliases *aliasgo.AliasChannel, registrations bcgo.Channel, subscriptions bcgo.Channel, usageRecords *bcgo.PoWChannel, node *bcgo.Node, cache *bcgo.FileCache, productId, planId string, listener bcgo.MiningListener) {
 	usage, err := cache.MeasureStorageUsage(spacego.SPACE_PREFIX)
 	if err != nil {
-		return err
+		log.Println(err)
+		return
 	}
 	for alias, size := range usage {
 		log.Println("Usage", alias, ":", bcgo.DecimalSizeToString(size))
@@ -789,42 +787,48 @@ func MeasureStorageUsage(aliases *aliasgo.AliasChannel, registrations bcgo.Chann
 		// Get rsa.PublicKey for Alias
 		publicKey, err := aliases.GetPublicKey(node.Cache, node.Network, alias)
 		if err != nil {
-			return err
+			log.Println(err)
+			continue
 		}
 
 		// Get Registration for Alias
 		registration, err := financego.GetRegistrationSync(registrations, node.Cache, node.Network, node.Alias, node.Key, alias, nil)
 		if err != nil {
-			return err
+			log.Println(err)
+			continue
 		}
 		if registration == nil {
 			log.Println(errors.New(alias + " is not registered but is storing " + bcgo.DecimalSizeToString(size)))
-			break
+			continue
 		}
 
 		// Get Subscription for Alias
 		subscription, err := financego.GetSubscriptionSync(subscriptions, node.Cache, node.Network, node.Alias, node.Key, alias, nil, productId, planId)
 		if err != nil {
-			return err
+			log.Println(err)
+			continue
 		}
 		if subscription == nil {
 			log.Println(errors.New(alias + " is not subscribed but is storing " + bcgo.DecimalSizeToString(size)))
-			break
+			// TODO if alias is registered but not subscribed bill the monthly rate divided by the average number of days in a month (365.25/12) or the minimum charge amount (whichever is greater)
+			continue
 		} else {
 			// Log Subscription Usage
 			if registration.CustomerId != subscription.CustomerId {
 				log.Println(errors.New("Registration Customer ID doesn't match Subscription Customer ID"))
-				break
+				continue
 			}
 			stripeUsageRecord, bcUsageRecord, err := financego.NewUsageRecord(node.Alias, alias, subscription.SubscriptionId, subscription.SubscriptionItemId, productId, planId, time.Now().Unix(), int64(size))
 			if err != nil {
-				return err
+				log.Println(err)
+				continue
 			}
 			log.Println("UsageRecord", stripeUsageRecord)
 			log.Println("UsageRecord", bcUsageRecord)
 			data, err := proto.Marshal(bcUsageRecord)
 			if err != nil {
-				return err
+				log.Println(err)
+				continue
 			}
 			access := map[string]*rsa.PublicKey{
 				alias:      publicKey,
@@ -832,25 +836,28 @@ func MeasureStorageUsage(aliases *aliasgo.AliasChannel, registrations bcgo.Chann
 			}
 			_, record, err := bcgo.CreateRecord(node.Alias, node.Key, access, nil, data)
 			if err != nil {
-				return err
+				log.Println(err)
+				continue
 			}
 			// Write record to cache
 			reference, err := bcgo.WriteRecord(usageRecords.GetName(), node.Cache, record)
 			if err != nil {
-				return err
+				log.Println(err)
+				continue
 			}
 			log.Println("Wrote Usage Record", base64.RawURLEncoding.EncodeToString(reference.RecordHash))
 		}
 	}
 	// Mine UsageChannel
 	if _, _, err := node.Mine(usageRecords, listener); err != nil {
-		return err
+		log.Println(err)
+		return
 	}
 
 	if err := bcgo.Push(usageRecords, node.Cache, node.Network); err != nil {
-		return err
+		log.Println(err)
+		return
 	}
-	return nil
 }
 
 func Write(node *bcgo.Node, channel bcgo.ThresholdChannel, record *bcgo.Record, listener bcgo.MiningListener) error {
