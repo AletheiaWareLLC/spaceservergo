@@ -82,7 +82,7 @@
                 sudo certbot certonly --standalone -d your_server_domain
 
                 # Allow spaceservergo to read security credentials
-                sudo chown -R your_server_username:your_server_username /etc/letsencrypt/live/your_server_domain/
+                sudo chown -R your_server_username:your_server_username /etc/letsencrypt/
             </code></pre>
 
             <h2>Cron</h2>
@@ -168,9 +168,23 @@
 
             <pre><code>
                 ALIAS=your_server_domain ROOT_DIRECTORY=~/space/ PEERS=bc.aletheiaware.com ~/space/spaceserver-linux-amd64 init
+            </code></pre>
 
-                # Allow spaceservergo to bind to port 443 (HTTPS)
-                # This is required each time the server binary is updated
+            <p>Register your node as a registrar</p>
+
+            <pre><code>
+                ALIAS=your_server_domain ROOT_DIRECTORY=~/space/ PEERS=bc.aletheiaware.com ~/space/spaceserver-linux-amd64 register-registrar your_domain your_country your_currency your_stripe_publishable_key your_stripe_storage_product_id your_stripe_storage_plan_id your_stripe_storage_price_per_gb
+            </code></pre>
+
+            <p>Register your node as a miner</p>
+
+            <pre><code>
+                ALIAS=your_server_domain ROOT_DIRECTORY=~/space/ PEERS=bc.aletheiaware.com ~/space/spaceserver-linux-amd64 register-miner your_domain your_country your_currency your_stripe_publishable_key your_stripe_mining_product_id your_stripe_mining_plan_id your_stripe_mining_price_per_mb
+            </code></pre>
+
+            <p>Allow spaceservergo to bind to port 443 (HTTPS) - This is required each time the server binary is updated</p>
+
+            <pre><code>
                 sudo setcap CAP_NET_BIND_SERVICE=+eip /home/your_server_username/space/spaceservergo-linux-amd64
             </code></pre>
 
@@ -193,7 +207,7 @@
                     PASSWORD='your_password'
                     ROOT_DIRECTORY=/home/your_server_username/space/
                     CERTIFICATE_DIRECTORY=/etc/letsencrypt/live/your_server_domain/
-                    PEERS=space.aletheiaware.com,bc.aletheiaware.com
+                    PEERS=space-sfo.aletheiaware.com,space-nyc.aletheiaware.com,bc.aletheiaware.com
             </code></pre>
 
             <h2>systemd</h2>
