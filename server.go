@@ -785,14 +785,14 @@ func MeasureStorageUsage(aliases *aliasgo.AliasChannel, registrations bcgo.Chann
 		log.Println("Usage", alias, ":", bcgo.DecimalSizeToString(size))
 
 		// Get rsa.PublicKey for Alias
-		publicKey, err := aliases.GetPublicKey(node.Cache, node.Network, alias)
+		publicKey, err := aliases.GetPublicKey(cache, node.Network, alias)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 
 		// Get Registration for Alias
-		registration, err := financego.GetRegistrationSync(registrations, node.Cache, node.Network, node.Alias, node.Key, alias, nil)
+		registration, err := financego.GetRegistrationSync(registrations, cache, node.Network, node.Alias, node.Key, alias, nil)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -803,7 +803,7 @@ func MeasureStorageUsage(aliases *aliasgo.AliasChannel, registrations bcgo.Chann
 		}
 
 		// Get Subscription for Alias
-		subscription, err := financego.GetSubscriptionSync(subscriptions, node.Cache, node.Network, node.Alias, node.Key, alias, nil, productId, planId)
+		subscription, err := financego.GetSubscriptionSync(subscriptions, cache, node.Network, node.Alias, node.Key, alias, nil, productId, planId)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -840,7 +840,7 @@ func MeasureStorageUsage(aliases *aliasgo.AliasChannel, registrations bcgo.Chann
 				continue
 			}
 			// Write record to cache
-			reference, err := bcgo.WriteRecord(usageRecords.GetName(), node.Cache, record)
+			reference, err := bcgo.WriteRecord(usageRecords.GetName(), cache, record)
 			if err != nil {
 				log.Println(err)
 				continue
@@ -854,7 +854,7 @@ func MeasureStorageUsage(aliases *aliasgo.AliasChannel, registrations bcgo.Chann
 		return
 	}
 
-	if err := bcgo.Push(usageRecords, node.Cache, node.Network); err != nil {
+	if err := bcgo.Push(usageRecords, cache, node.Network); err != nil {
 		log.Println(err)
 		return
 	}
