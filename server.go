@@ -19,6 +19,7 @@ package main
 import (
 	"bufio"
 	"crypto/rsa"
+	"crypto/tls"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -387,7 +388,9 @@ func (s *Server) Start(node *bcgo.Node) error {
 		}
 	}()
 	// Serve HTTPS Requests
-	return http.ListenAndServeTLS(":443", path.Join(s.Cert, "fullchain.pem"), path.Join(s.Cert, "privkey.pem"), mux)
+	config := &tls.Config{MinVersion: tls.VersionTLS10}
+	server := &http.Server{Addr: ":443", Handler: mux, TLSConfig: config}
+	return server.ListenAndServeTLS(path.Join(s.Cert, "fullchain.pem"), path.Join(s.Cert, "privkey.pem"))
 }
 
 func (s *Server) Handle(args []string) {
