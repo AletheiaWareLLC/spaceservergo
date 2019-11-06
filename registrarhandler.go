@@ -18,7 +18,7 @@ package main
 
 import (
 	"github.com/AletheiaWareLLC/bcgo"
-	"github.com/AletheiaWareLLC/bcnetgo"
+	"github.com/AletheiaWareLLC/netgo"
 	"github.com/AletheiaWareLLC/spacego"
 	"html/template"
 	"log"
@@ -31,7 +31,7 @@ func RegistrarHandler(template *template.Template, get func(string) (*spacego.Re
 		log.Println(r.RemoteAddr, r.Proto, r.Method, r.Host, r.URL.Path)
 		switch r.Method {
 		case "GET":
-			registrar := bcnetgo.GetQueryParameter(r.URL.Query(), "registrar")
+			registrar := netgo.GetQueryParameter(r.URL.Query(), "registrar")
 			log.Println("Registrar", registrar)
 			if len(registrar) > 0 {
 				r, err := get(registrar)

@@ -28,6 +28,7 @@ import (
 	"github.com/AletheiaWareLLC/bcgo"
 	"github.com/AletheiaWareLLC/bcnetgo"
 	"github.com/AletheiaWareLLC/financego"
+	"github.com/AletheiaWareLLC/netgo"
 	"github.com/AletheiaWareLLC/spacego"
 	"github.com/golang/protobuf/proto"
 	"html/template"
@@ -240,7 +241,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 	}))
 
 	// Redirect HTTP Requests to HTTPS
-	go http.ListenAndServe(":80", http.HandlerFunc(bcnetgo.HTTPSRedirect(map[string]bool{
+	go http.ListenAndServe(":80", http.HandlerFunc(netgo.HTTPSRedirect(map[string]bool{
 		"/":                        true,
 		"/alias":                   true,
 		"/alias-register":          true,
@@ -259,7 +260,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 
 	// Serve Web Requests
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", bcnetgo.StaticHandler)
+	mux.HandleFunc("/", netgo.StaticHandler("html/static"))
 	aliasTemplate, err := template.ParseFiles("html/template/alias.html")
 	if err != nil {
 		return err

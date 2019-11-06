@@ -18,7 +18,7 @@ package main
 
 import (
 	"github.com/AletheiaWareLLC/bcgo"
-	"github.com/AletheiaWareLLC/bcnetgo"
+	"github.com/AletheiaWareLLC/netgo"
 	"github.com/AletheiaWareLLC/spacego"
 	"html/template"
 	"log"
@@ -31,7 +31,7 @@ func MinerHandler(template *template.Template, get func(string) (*spacego.Miner,
 		log.Println(r.RemoteAddr, r.Proto, r.Method, r.Host, r.URL.Path)
 		switch r.Method {
 		case "GET":
-			miner := bcnetgo.GetQueryParameter(r.URL.Query(), "miner")
+			miner := netgo.GetQueryParameter(r.URL.Query(), "miner")
 			log.Println("Miner", miner)
 			if len(miner) > 0 {
 				m, err := get(miner)
