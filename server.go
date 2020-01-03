@@ -27,6 +27,7 @@ import (
 	"github.com/AletheiaWareLLC/aliasservergo"
 	"github.com/AletheiaWareLLC/bcgo"
 	"github.com/AletheiaWareLLC/bcnetgo"
+	"github.com/AletheiaWareLLC/cryptogo"
 	"github.com/AletheiaWareLLC/financego"
 	"github.com/AletheiaWareLLC/netgo"
 	"github.com/AletheiaWareLLC/spacego"
@@ -112,8 +113,8 @@ func (s *Server) RegisterRegistrar(node *bcgo.Node, domain, country, currency, p
 	}
 
 	// Generate Signature
-	signatureAlgorithm := bcgo.SignatureAlgorithm_SHA512WITHRSA_PSS
-	signature, err := bcgo.CreateSignature(node.Key, bcgo.Hash(data), signatureAlgorithm)
+	signatureAlgorithm := cryptogo.SignatureAlgorithm_SHA512WITHRSA_PSS
+	signature, err := cryptogo.CreateSignature(node.Key, cryptogo.Hash(data), signatureAlgorithm)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +124,7 @@ func (s *Server) RegisterRegistrar(node *bcgo.Node, domain, country, currency, p
 		Timestamp:           uint64(time.Now().UnixNano()),
 		Creator:             node.Alias,
 		Payload:             data,
-		EncryptionAlgorithm: bcgo.EncryptionAlgorithm_UNKNOWN_ENCRYPTION,
+		EncryptionAlgorithm: cryptogo.EncryptionAlgorithm_UNKNOWN_ENCRYPTION,
 		Signature:           signature,
 		SignatureAlgorithm:  signatureAlgorithm,
 	}
@@ -160,8 +161,8 @@ func (s *Server) RegisterMiner(node *bcgo.Node, domain, country, currency, publi
 	}
 
 	// Generate Signature
-	signatureAlgorithm := bcgo.SignatureAlgorithm_SHA512WITHRSA_PSS
-	signature, err := bcgo.CreateSignature(node.Key, bcgo.Hash(data), signatureAlgorithm)
+	signatureAlgorithm := cryptogo.SignatureAlgorithm_SHA512WITHRSA_PSS
+	signature, err := cryptogo.CreateSignature(node.Key, cryptogo.Hash(data), signatureAlgorithm)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +172,7 @@ func (s *Server) RegisterMiner(node *bcgo.Node, domain, country, currency, publi
 		Timestamp:           uint64(time.Now().UnixNano()),
 		Creator:             node.Alias,
 		Payload:             data,
-		EncryptionAlgorithm: bcgo.EncryptionAlgorithm_UNKNOWN_ENCRYPTION,
+		EncryptionAlgorithm: cryptogo.EncryptionAlgorithm_UNKNOWN_ENCRYPTION,
 		Signature:           signature,
 		SignatureAlgorithm:  signatureAlgorithm,
 	}
@@ -406,7 +407,7 @@ func (s *Server) Handle(args []string) {
 			}
 			log.Println("Initialized")
 			log.Println(node.Alias)
-			publicKeyBytes, err := bcgo.RSAPublicKeyToPKIXBytes(&node.Key.PublicKey)
+			publicKeyBytes, err := cryptogo.RSAPublicKeyToPKIXBytes(&node.Key.PublicKey)
 			if err != nil {
 				log.Println(err)
 				return
@@ -562,7 +563,7 @@ func main() {
 		Cert:     certDir,
 		Cache:    cache,
 		Network:  network,
-		Listener: &bcgo.PrintingMiningListener{os.Stdout},
+		Listener: &bcgo.PrintingMiningListener{Output: os.Stdout},
 	}
 
 	server.Handle(os.Args[1:])
@@ -602,7 +603,7 @@ func MiningHandler(aliases *aliasgo.AliasChannel, charges *bcgo.PoWChannel, usag
 			}
 
 			// Verify Signature
-			if err := bcgo.VerifySignature(publicKey, bcgo.Hash(record.Payload), record.Signature, record.SignatureAlgorithm); err != nil {
+			if err := cryptogo.VerifySignature(publicKey, cryptogo.Hash(record.Payload), record.Signature, record.SignatureAlgorithm); err != nil {
 				log.Println("Signature Verification Failed", err)
 				return
 			}
