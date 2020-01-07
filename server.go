@@ -121,7 +121,7 @@ func (s *Server) RegisterRegistrar(node *bcgo.Node, domain, country, currency, p
 
 	// Create record
 	record := &bcgo.Record{
-		Timestamp:           uint64(time.Now().UnixNano()),
+		Timestamp:           bcgo.Timestamp(),
 		Creator:             node.Alias,
 		Payload:             data,
 		EncryptionAlgorithm: cryptogo.EncryptionAlgorithm_UNKNOWN_ENCRYPTION,
@@ -169,7 +169,7 @@ func (s *Server) RegisterMiner(node *bcgo.Node, domain, country, currency, publi
 
 	// Create record
 	record := &bcgo.Record{
-		Timestamp:           uint64(time.Now().UnixNano()),
+		Timestamp:           bcgo.Timestamp(),
 		Creator:             node.Alias,
 		Payload:             data,
 		EncryptionAlgorithm: cryptogo.EncryptionAlgorithm_UNKNOWN_ENCRYPTION,
@@ -714,7 +714,7 @@ func MiningHandler(aliases *aliasgo.AliasChannel, charges *bcgo.PoWChannel, usag
 					log.Println(err)
 					return
 				}
-				_, record, err := bcgo.CreateRecord(node.Alias, node.Key, access, references, data)
+				_, record, err := bcgo.CreateRecord(bcgo.Timestamp(), node.Alias, node.Key, access, references, data)
 				if err != nil {
 					log.Println(err)
 					return
@@ -753,7 +753,7 @@ func MiningHandler(aliases *aliasgo.AliasChannel, charges *bcgo.PoWChannel, usag
 					log.Println(err)
 					return
 				}
-				_, record, err := bcgo.CreateRecord(node.Alias, node.Key, access, references, data)
+				_, record, err := bcgo.CreateRecord(bcgo.Timestamp(), node.Alias, node.Key, access, references, data)
 				if err != nil {
 					log.Println(err)
 					return
@@ -839,7 +839,7 @@ func MeasureStorageUsage(aliases *aliasgo.AliasChannel, registrations bcgo.Chann
 				alias:      publicKey,
 				node.Alias: &node.Key.PublicKey,
 			}
-			_, record, err := bcgo.CreateRecord(node.Alias, node.Key, access, nil, data)
+			_, record, err := bcgo.CreateRecord(bcgo.Timestamp(), node.Alias, node.Key, access, nil, data)
 			if err != nil {
 				log.Println(err)
 				continue
