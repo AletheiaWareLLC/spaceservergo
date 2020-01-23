@@ -264,7 +264,8 @@ func (s *Server) Start(node *bcgo.Node) error {
 		channel, err := node.GetChannel(name)
 		if err != nil {
 			if strings.HasPrefix(name, spacego.SPACE_PREFIX) {
-				s.LoadChannel(node, bcgo.OpenPoWChannel(name, bcgo.THRESHOLD_STANDARD))
+				channel = bcgo.OpenPoWChannel(name, bcgo.THRESHOLD_STANDARD)
+				s.LoadChannel(node, channel)
 			} else {
 				return nil, err
 			}
