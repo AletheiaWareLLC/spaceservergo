@@ -318,7 +318,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 		return err
 	}
 	mux.HandleFunc("/channels", bcnetgo.ChannelListHandler(s.Cache, s.Network, channelListTemplate, node.GetChannels))
-	mux.HandleFunc("/keys", bcnetgo.KeyShareHandler(make(bcnetgo.KeyShareStore), 2*time.Minute))
+	mux.HandleFunc("/keys", cryptogo.KeyShareHandler(make(cryptogo.KeyShareStore), 2*time.Minute))
 	minerTemplate, err := template.ParseFiles("html/template/miner.html")
 	if err != nil {
 		return err
