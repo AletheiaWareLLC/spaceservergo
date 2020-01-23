@@ -19,19 +19,35 @@
 
             <h1>S P A C E</h1>
 
-            <table>
-                <tr>
-                    <td>Alias</td>
-                    <td>{{ .Alias }}</td>
-                </tr>
-                <tr>
-                    <td>Timestamp</td>
-                    <td>{{ .Timestamp }}</td>
-                </tr>
-                <tr>
-                    <td>PublicKey</td>
-                    <td>{{ .PublicKey }}</td>
-                </tr>
+            <table class="center" width="100%">
+                {{ if eq .Alias "" }}
+                    <form action="/alias" method="get">
+                        <tr>
+                            <th style="text-align:right;">Alias</th>
+                            <td>
+                                <input type="text" id="alias" name="alias" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" style="text-align:center;">
+                                <input type="submit" value="Search" />
+                            </td>
+                        </tr>
+                    </form>
+                {{ else }}
+                    <tr>
+                        <th style="text-align:right;">Alias</th>
+                        <td>{{ .Alias }}</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align:right;">Timestamp</th>
+                        <td>{{ .Timestamp }}</td>
+                    </tr>
+                    <tr>
+                        <th style="text-align:right;">PublicKey</th>
+                        <td>{{ .PublicKey }}</td>
+                    </tr>
+                {{ end }}
             </table>
 
             <div class="footer">
