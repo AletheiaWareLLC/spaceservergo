@@ -71,7 +71,6 @@ sudo certbot certonly --standalone -d ${DOMAIN}
 # Allow spaceservergo to read security credentials
 sudo chown -R ${USERNAME}:${USERNAME} /etc/letsencrypt/
 
-
 # Add cron job to renew certificate on the first day of the week
 (sudo crontab -l ; echo '* * * * 0 sudo certbot renew --pre-hook "systemctl stop space" --post-hook "systemctl start space"') | sudo crontab -
 
