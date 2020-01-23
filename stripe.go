@@ -18,7 +18,7 @@ package main
 
 import "github.com/stripe/stripe-go"
 
-func StripeEventHandler(event stripe.Event) {
+func StripeEventHandler(event *stripe.Event) {
 	switch event.Type {
 	case "account.updated":
 		// TODO mine event into BC
