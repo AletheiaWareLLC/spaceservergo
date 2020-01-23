@@ -243,7 +243,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 	daily.FillChannelSet(channels, s.Cache, s.Network)
 	yearly.FillChannelSet(channels, s.Cache, s.Network)
 	for c, b := range channels {
-		if b {
+		if b && strings.HasPrefix(c, spacego.SPACE_PREFIX) {
 			s.LoadChannel(node, bcgo.OpenPoWChannel(c, bcgo.THRESHOLD_STANDARD))
 		}
 	}
