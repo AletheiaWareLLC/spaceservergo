@@ -863,7 +863,7 @@ func MeasureStorageUsage(aliases *bcgo.Channel, registrations *bcgo.Channel, sub
 				continue
 			}
 			// Write record to cache
-			reference, err := bcgo.WriteRecord(usageRecords.GetName(), cache, record)
+			reference, err := bcgo.WriteRecord(usageRecords.Name, cache, record)
 			if err != nil {
 				log.Println(err)
 				continue
@@ -893,7 +893,7 @@ func Write(node *bcgo.Node, channel *bcgo.Channel, record *bcgo.Record, threshol
 	}
 
 	// Write record to cache
-	reference, err := bcgo.WriteRecord(channel.GetName(), node.Cache, record)
+	reference, err := bcgo.WriteRecord(channel.Name, node.Cache, record)
 	if err != nil {
 		return err
 	}
