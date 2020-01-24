@@ -130,7 +130,7 @@ func (s *Server) RegisterRegistrar(node *bcgo.Node, domain, country, currency, p
 	}
 
 	// Write Record
-	if err := Write(node, spacego.OpenRegistrarChannel(), record, s.Listener); err != nil {
+	if err := Write(node, spacego.OpenRegistrarChannel(), record, bcgo.THRESHOLD_G, s.Listener); err != nil {
 		return nil, err
 	}
 
@@ -178,7 +178,7 @@ func (s *Server) RegisterMiner(node *bcgo.Node, domain, country, currency, publi
 	}
 
 	// Write Record
-	if err := Write(node, spacego.OpenMinerChannel(), record, s.Listener); err != nil {
+	if err := Write(node, spacego.OpenMinerChannel(), record, bcgo.THRESHOLD_G, s.Listener); err != nil {
 		return nil, err
 	}
 
@@ -242,9 +242,16 @@ func (s *Server) Start(node *bcgo.Node) error {
 	hourly.FillChannelSet(channels, s.Cache, s.Network)
 	daily.FillChannelSet(channels, s.Cache, s.Network)
 	yearly.FillChannelSet(channels, s.Cache, s.Network)
+
+	// Unmark channels already open
+	for k := range node.Channels {
+		channels[k] = false
+	}
+
+	// Open all channels marked in map
 	for c, b := range channels {
 		if b && strings.HasPrefix(c, spacego.SPACE_PREFIX) {
-			s.LoadChannel(node, bcgo.OpenPoWChannel(c, bcgo.THRESHOLD_STANDARD))
+			s.LoadChannel(node, bcgo.OpenPoWChannel(c, spacego.GetThreshold(c)))
 		}
 	}
 
@@ -264,7 +271,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 		channel, err := node.GetChannel(name)
 		if err != nil {
 			if strings.HasPrefix(name, spacego.SPACE_PREFIX) {
-				channel = bcgo.OpenPoWChannel(name, bcgo.THRESHOLD_STANDARD)
+				channel = bcgo.OpenPoWChannel(name, spacego.GetThreshold(name))
 				s.LoadChannel(node, channel)
 			} else {
 				return nil, err
@@ -346,7 +353,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 		return err
 	}
 	publishableKey := os.Getenv("STRIPE_PUBLISHABLE_KEY")
-	mux.HandleFunc("/space-register", bcnetgo.RegistrationHandler(aliases, registrations, node, bcgo.THRESHOLD_STANDARD, s.Listener, registrationTemplate, publishableKey))
+	mux.HandleFunc("/space-register", bcnetgo.RegistrationHandler(aliases, registrations, node, bcgo.THRESHOLD_G, s.Listener, registrationTemplate, publishableKey))
 	subscriptionTemplate, err := template.ParseFiles("html/template/space-subscribe-storage.go.html")
 	if err != nil {
 		return err
@@ -355,15 +362,15 @@ func (s *Server) Start(node *bcgo.Node) error {
 	currency := os.Getenv("STRIPE_CURRENCY")
 	storageProductId := os.Getenv("STRIPE_STORAGE_PRODUCT_ID")
 	storagePlanId := os.Getenv("STRIPE_STORAGE_PLAN_ID")
-	mux.HandleFunc("/space-subscribe-storage", bcnetgo.SubscriptionHandler(aliases, subscriptions, node, bcgo.THRESHOLD_STANDARD, s.Listener, subscriptionTemplate, "/subscribed-storage.html", storageProductId, storagePlanId))
-	subscriptionTemplate, err = template.ParseFiles("html/template/space-subscribe-mining.html")
+	mux.HandleFunc("/space-subscribe-storage", bcnetgo.SubscriptionHandler(aliases, subscriptions, node, bcgo.THRESHOLD_G, s.Listener, subscriptionTemplate, "/subscribed-storage.html", storageProductId, storagePlanId))
+	subscriptionTemplate, err = template.ParseFiles("html/template/space-subscribe-mining.go.html")
 	if err != nil {
 		return err
 	}
 	miningProductId := os.Getenv("STRIPE_MINING_PRODUCT_ID")
 	miningPlanId := os.Getenv("STRIPE_MINING_PLAN_ID")
 	if miningProductId != "" && miningPlanId != "" {
-		mux.HandleFunc("/space-subscribe-mining", bcnetgo.SubscriptionHandler(aliases, subscriptions, node, bcgo.THRESHOLD_STANDARD, s.Listener, subscriptionTemplate, "/subscribed-mining.html", miningProductId, miningPlanId))
+		mux.HandleFunc("/space-subscribe-mining", bcnetgo.SubscriptionHandler(aliases, subscriptions, node, bcgo.THRESHOLD_G, s.Listener, subscriptionTemplate, "/subscribed-mining.html", miningProductId, miningPlanId))
 		mux.HandleFunc("/mining/file", MiningHandler(aliases, charges, usageRecords, node, s.Listener, country, currency, miningProductId, miningPlanId, func(record *bcgo.Record) []string {
 			// Space-File-<creator-alias>
 			return []string{
@@ -672,11 +679,12 @@ func MiningHandler(aliases *bcgo.Channel, charges *bcgo.Channel, usageRecords *b
 			amount := 0
 
 			for _, name := range names {
+				threshold := spacego.GetThreshold(name)
 				channel, err := node.GetChannel(name)
 				if err != nil {
 					if strings.HasPrefix(name, spacego.SPACE_PREFIX) {
-						// TODO s.LoadChannel(node, bcgo.OpenPoWChannel(name, bcgo.THRESHOLD_STANDARD))
-						channel = bcgo.OpenPoWChannel(name, bcgo.THRESHOLD_STANDARD)
+						channel = bcgo.OpenPoWChannel(name, threshold)
+						// TODO s.LoadChannel(node, channel)
 						if err := channel.LoadCachedHead(node.Cache); err != nil {
 							log.Println(err)
 						}
@@ -709,7 +717,7 @@ func MiningHandler(aliases *bcgo.Channel, charges *bcgo.Channel, usageRecords *b
 				}
 
 				// Mine channel
-				_, block, err := node.Mine(channel, bcgo.THRESHOLD_STANDARD, listener)
+				_, block, err := node.Mine(channel, threshold, listener)
 				if err != nil {
 					log.Println(err)
 					return
@@ -752,21 +760,9 @@ func MiningHandler(aliases *bcgo.Channel, charges *bcgo.Channel, usageRecords *b
 					log.Println(err)
 					return
 				}
-				// Write record to cache
-				reference, err := bcgo.WriteRecord(charges.GetName(), node.Cache, record)
-				if err != nil {
+				if err := Write(node, charges, record, bcgo.THRESHOLD_G, listener); err != nil {
 					log.Println(err)
 					return
-				}
-				log.Println("Wrote Charge", base64.RawURLEncoding.EncodeToString(reference.RecordHash))
-				// Mine ChargeChannel
-				if _, _, err := node.Mine(charges, bcgo.THRESHOLD_STANDARD, listener); err != nil {
-					log.Println(err)
-					return
-				}
-				// Push to peers
-				if err := charges.Push(node.Cache, node.Network); err != nil {
-					log.Println(err)
 				}
 			} else {
 				// Log Subscription Usage
@@ -791,20 +787,9 @@ func MiningHandler(aliases *bcgo.Channel, charges *bcgo.Channel, usageRecords *b
 					log.Println(err)
 					return
 				}
-				// Write record to cache
-				reference, err := bcgo.WriteRecord(usageRecords.GetName(), node.Cache, record)
-				if err != nil {
+				if err := Write(node, usageRecords, record, bcgo.THRESHOLD_G, listener); err != nil {
 					log.Println(err)
 					return
-				}
-				log.Println("Wrote Usage Record", base64.RawURLEncoding.EncodeToString(reference.RecordHash))
-				// Mine UsageChannel
-				if _, _, err := node.Mine(usageRecords, bcgo.THRESHOLD_STANDARD, listener); err != nil {
-					log.Println(err)
-				}
-
-				if err := usageRecords.Push(node.Cache, node.Network); err != nil {
-					log.Println(err)
 				}
 			}
 		default:
@@ -887,7 +872,7 @@ func MeasureStorageUsage(aliases *bcgo.Channel, registrations *bcgo.Channel, sub
 		}
 	}
 	// Mine UsageChannel
-	if _, _, err := node.Mine(usageRecords, bcgo.THRESHOLD_STANDARD, listener); err != nil {
+	if _, _, err := node.Mine(usageRecords, bcgo.THRESHOLD_G, listener); err != nil {
 		log.Println(err)
 		return
 	}
@@ -898,7 +883,7 @@ func MeasureStorageUsage(aliases *bcgo.Channel, registrations *bcgo.Channel, sub
 	}
 }
 
-func Write(node *bcgo.Node, channel *bcgo.Channel, record *bcgo.Record, listener bcgo.MiningListener) error {
+func Write(node *bcgo.Node, channel *bcgo.Channel, record *bcgo.Record, threshold uint64, listener bcgo.MiningListener) error {
 	// Update Channel
 	if err := channel.LoadCachedHead(node.Cache); err != nil {
 		log.Println(err)
@@ -915,7 +900,7 @@ func Write(node *bcgo.Node, channel *bcgo.Channel, record *bcgo.Record, listener
 	log.Println("Wrote Record", base64.RawURLEncoding.EncodeToString(reference.RecordHash))
 
 	// Mine record into blockchain
-	hash, _, err := node.Mine(channel, bcgo.THRESHOLD_STANDARD, listener)
+	hash, _, err := node.Mine(channel, threshold, listener)
 	if err != nil {
 		return err
 	}
