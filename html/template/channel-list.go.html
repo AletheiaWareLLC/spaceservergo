@@ -6,7 +6,7 @@
 
     <head>
         <link rel="stylesheet" href="styles.css">
-        <title>{{ .Channel }} - S P A C E</title>
+        <title>Channels - S P A C E</title>
     </head>
 
     <body>
@@ -19,19 +19,21 @@
 
             <h1>S P A C E</h1>
 
-            <table>
+            <table class="center" width="100%">
                 <tr>
-                    <td>Channel</td>
-                    <td>{{ .Channel }}</td>
+                    <th></th>
+                    <th>Channel</th>
+                    <th>Timestamp</th>
+                    <th>Head</th>
                 </tr>
-                <tr>
-                    <td>Timestamp</td>
-                    <td>{{ .Timestamp }}</td>
-                </tr>
-                <tr>
-                    <td>Head</td>
-                    <td><a href="block?channel={{ .Channel }}&hash={{ .Hash }}">{{ .Hash }}</a></td>
-                </tr>
+                {{ range $key, $value := .Channel }}
+                    <tr>
+                        <td>{{ $key }}
+                        <td><a href="channel?channel={{ $value.Name }}">{{ $value.Name }}</a></td>
+                        <td>{{ $value.Timestamp }}</td>
+                        <td><a href="block?channel={{ $value.Name }}&hash={{ $value.Hash }}">{{ $value.Hash }}</a></td>
+                    </tr>
+                {{ end }}
             </table>
 
             <div class="footer">

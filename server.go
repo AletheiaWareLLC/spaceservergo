@@ -294,60 +294,60 @@ func (s *Server) Start(node *bcgo.Node) error {
 	// Serve Web Requests
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", netgo.StaticHandler("html/static"))
-	aliasTemplate, err := template.ParseFiles("html/template/alias.html")
+	aliasTemplate, err := template.ParseFiles("html/template/alias.go.html")
 	if err != nil {
 		return err
 	}
 	mux.HandleFunc("/alias", aliasservergo.AliasHandler(aliases, s.Cache, s.Network, aliasTemplate))
-	aliasRegistrationTemplate, err := template.ParseFiles("html/template/alias-register.html")
+	aliasRegistrationTemplate, err := template.ParseFiles("html/template/alias-register.go.html")
 	if err != nil {
 		return err
 	}
 	mux.HandleFunc("/alias-register", aliasservergo.AliasRegistrationHandler(aliases, node, aliasgo.ALIAS_THRESHOLD, s.Listener, aliasRegistrationTemplate))
-	blockTemplate, err := template.ParseFiles("html/template/block.html")
+	blockTemplate, err := template.ParseFiles("html/template/block.go.html")
 	if err != nil {
 		return err
 	}
 	mux.HandleFunc("/block", bcnetgo.BlockHandler(s.Cache, s.Network, blockTemplate))
-	channelTemplate, err := template.ParseFiles("html/template/channel.html")
+	channelTemplate, err := template.ParseFiles("html/template/channel.go.html")
 	if err != nil {
 		return err
 	}
 	mux.HandleFunc("/channel", bcnetgo.ChannelHandler(s.Cache, s.Network, channelTemplate))
-	channelListTemplate, err := template.ParseFiles("html/template/channel-list.html")
+	channelListTemplate, err := template.ParseFiles("html/template/channel-list.go.html")
 	if err != nil {
 		return err
 	}
 	mux.HandleFunc("/channels", bcnetgo.ChannelListHandler(s.Cache, s.Network, channelListTemplate, node.GetChannels))
 	mux.HandleFunc("/keys", cryptogo.KeyShareHandler(make(cryptogo.KeyShareStore), 2*time.Minute))
-	minerTemplate, err := template.ParseFiles("html/template/miner.html")
+	minerTemplate, err := template.ParseFiles("html/template/miner.go.html")
 	if err != nil {
 		return err
 	}
 	mux.HandleFunc("/miner", MinerHandler(minerTemplate, spacego.GetMiner(miners, s.Cache, s.Network)))
-	minerListTemplate, err := template.ParseFiles("html/template/miner-list.html")
+	minerListTemplate, err := template.ParseFiles("html/template/miner-list.go.html")
 	if err != nil {
 		return err
 	}
 	mux.HandleFunc("/miners", MinerListHandler(minerListTemplate, spacego.GetMiners(miners, s.Cache, s.Network)))
-	registrarTemplate, err := template.ParseFiles("html/template/registrar.html")
+	registrarTemplate, err := template.ParseFiles("html/template/registrar.go.html")
 	if err != nil {
 		return err
 	}
 	mux.HandleFunc("/registrar", RegistrarHandler(registrarTemplate, spacego.GetRegistrar(registrars, s.Cache, s.Network)))
-	registrarListTemplate, err := template.ParseFiles("html/template/registrar-list.html")
+	registrarListTemplate, err := template.ParseFiles("html/template/registrar-list.go.html")
 	if err != nil {
 		return err
 	}
 	mux.HandleFunc("/registrars", RegistrarListHandler(registrarListTemplate, spacego.GetRegistrars(registrars, s.Cache, s.Network)))
 	mux.HandleFunc("/stripe-webhook", bcnetgo.StripeWebhookHandler(StripeEventHandler))
-	registrationTemplate, err := template.ParseFiles("html/template/space-register.html")
+	registrationTemplate, err := template.ParseFiles("html/template/space-register.go.html")
 	if err != nil {
 		return err
 	}
 	publishableKey := os.Getenv("STRIPE_PUBLISHABLE_KEY")
 	mux.HandleFunc("/space-register", bcnetgo.RegistrationHandler(aliases, registrations, node, bcgo.THRESHOLD_STANDARD, s.Listener, registrationTemplate, publishableKey))
-	subscriptionTemplate, err := template.ParseFiles("html/template/space-subscribe-storage.html")
+	subscriptionTemplate, err := template.ParseFiles("html/template/space-subscribe-storage.go.html")
 	if err != nil {
 		return err
 	}
