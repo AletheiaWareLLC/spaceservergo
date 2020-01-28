@@ -120,6 +120,7 @@ ALIAS=${DOMAIN}
 PASSWORD='${PASSWORD}'
 ROOT_DIRECTORY=/home/${USERNAME}/space/
 CERTIFICATE_DIRECTORY=/etc/letsencrypt/live/${DOMAIN}/
+LIVE=true
 EOT
 chmod 600 /home/${USERNAME}/space/config
 
