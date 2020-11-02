@@ -27,21 +27,9 @@
 
             <h2>Stripe</h2>
 
-            <p>Create an account with Stripe and add two products;
-                <ol>
-                    <li>Mining</li>
-                    <li>Storage</li>
-                </ol>
-            </p>
+            <p>Create an account with Stripe and add a product and pricing plan for the Storage service (metered, value of last usage record in period, price per group of 1000000000 (Gigabyte))</p>
 
-            <p>For each product create a pricing plan;
-                <ol>
-                    <li>Mining - metered, sum up usage during period, price per group of.</li>
-                    <li>Storage - metered, value of last usage record in period, price per group of.</li>
-                </ol>
-            </p>
-
-            <p>Optionally, create a coupon to grant yourself, your family and your friends discounted mining and storage.</p>
+            <p>Optionally, create a coupon to grant yourself, your family and your friends discounted storage.</p>
 
             <h2>Automatic Install</h2>
 
@@ -84,9 +72,10 @@
                 sudo ufw allow 443
 
                 # Allow space ports
-                sudo ufw allow 22222
-                sudo ufw allow 22322
-                sudo ufw allow 23232
+                sudo ufw allow 22022 # connect port
+                sudo ufw allow 22222 # get block port
+                sudo ufw allow 22322 # get head port
+                sudo ufw allow 23232 # broadcast port
 
                 # Enable firewall
                 sudo ufw enable
@@ -153,12 +142,6 @@
                 ALIAS=your_server_domain ROOT_DIRECTORY=~/space/ ~/space/spaceserver-linux-amd64 register-registrar your_domain your_country your_currency your_stripe_publishable_key your_stripe_storage_product_id your_stripe_storage_plan_id your_stripe_storage_price_per_gb
             </code></pre>
 
-            <p>Register your node as a miner</p>
-
-            <pre><code>
-                ALIAS=your_server_domain ROOT_DIRECTORY=~/space/ ~/space/spaceserver-linux-amd64 register-miner your_domain your_country your_currency your_stripe_publishable_key your_stripe_mining_product_id your_stripe_mining_plan_id your_stripe_mining_price_per_mb
-            </code></pre>
-
             <p>Allow spaceservergo to bind to port 443 (HTTPS) - This is required each time the server binary is updated</p>
 
             <pre><code>
@@ -171,14 +154,13 @@
                 # Create space config
                 nano /home/your_server_username/space/config
 
+                    COMPANY=company_legal_name
                     STRIPE_COUNTRY=US
                     STRIPE_CURRENCY=usd
                     STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
                     STRIPE_SECRET_KEY=your_stripe_secret_key
                     STRIPE_STORAGE_PRODUCT_ID=your_stripe_storage_product_id
                     STRIPE_STORAGE_PLAN_ID=your_stripe_storage_plan_id
-                    STRIPE_MINING_PRODUCT_ID=your_stripe_mining_product_id
-                    STRIPE_MINING_PLAN_ID=your_stripe_mining_plan_id
                     STRIPE_WEB_HOOK_SECRET_KEY=your_stripe_web_hook_secret_key
                     ALIAS=your_server_domain
                     PASSWORD='your_password'
@@ -226,7 +208,7 @@
             </code></pre>
 
             <div class="footer">
-                <p>© 2019 Aletheia Ware LLC.  All rights reserved.</p>
+                <p>© 2019-2020 Aletheia Ware LLC.  All rights reserved.</p>
             </div>
         </div>
     </body>

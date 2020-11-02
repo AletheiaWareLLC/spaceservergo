@@ -29,7 +29,7 @@
             <p>To prevent loss of access to your data in case your device gets damaged, lost, or stolen, Aletheia Ware recommends provisioning multiple devices (see Export & Import below) and making a hard copy of your key pair and storing it in a secure location such as a fire-proof safe, or bank vault.</p>
 
             <h2>Register & Subscribe</h2>
-            <p>Storage and Mining services are offered by to registered customers on a subscription basis.</p>
+            <p>Storage services are offered to registered customers on a subscription basis.</p>
 
             <p><a href="/space-register">Register</a> your account by providing the following information;
                 <ul>
@@ -55,16 +55,8 @@
                 </ul>
             </p>
 
-            <h3>Mining Service</h3>
-            <p>Mine your data with <a href="/miners">Miners</a>. Click <a href="/space-subscribe-mining">Subscribe</a> and provide the following information;
-                <ul>
-                    <li>Alias - registered to your public key and signed by your private key.</li>
-                    <li>Customer ID - associated with your alias when registering.</li>
-                </ul>
-            </p>
-
             <h2>Encrypt & Upload</h2>
-            <p>A 128bit AES key is generated and used to encrypt each file. The key itself is then encrypted with your public key, and, along with the encrypted file, either mined into the blockchain locally, or uploaded to a <a href="/miners">Remote Mining Service</a>.</p>
+            <p>A 256bit AES key is generated and used to encrypt each file. The key itself is then encrypted with your public key, and, along with the encrypted file mined into the blockchain</p>
 
             <h2>List & Show</h2>
             <p>Each time a file is stored, a Meta object is created which includes the time, file name, mime type, size, and references the file's encrypted data. The Meta object is also encrypted but mined into a different blockchain, allowing you to list your stored files and view information about them, without needing to sync the blockchain containing the file's encrypted data.</p>
@@ -93,17 +85,16 @@
                         <ul>
                             <li><a href="https://github.com/AletheiaWareLLC/Space">Protobuf</a></li>
                             <li><a href="https://github.com/AletheiaWareLLC/spacego">Go</a></li>
-                            <li><a href="https://github.com/AletheiaWareLLC/spaceclientgo">Client</a></li>
+                            <li><a href="https://github.com/AletheiaWareLLC/spaceclientgo">CLI Client</a></li>
+                            <li><a href="https://github.com/AletheiaWareLLC/spacefynego">GUI Client</a></li>
                             <li><a href="https://github.com/AletheiaWareLLC/spaceservergo">Server</a></li>
-                            <li><a href="https://github.com/AletheiaWareLLC/SpaceJava">Java</a></li>
-                            <li><a href="https://github.com/AletheiaWareLLC/SpaceAndroid">Android</a></li>
                         </ul>
                     </li>
                 </ul>
             </p>
 
             <div class="footer">
-                <p>© 2019 Aletheia Ware LLC.  All rights reserved.</p>
+                <p>© 2019-2020 Aletheia Ware LLC.  All rights reserved.</p>
             </div>
         </div>
     </body>

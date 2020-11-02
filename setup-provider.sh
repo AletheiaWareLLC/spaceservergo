@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2019 Aletheia Ware LLC
+# Copyright 2019-2020 Aletheia Ware LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ set -x
 
 read -p 'Username: ' USERNAME
 read -p -s 'Password: ' PASSWORD
+read -p 'Company' COMPANY
 read -p 'Domain Name: ' DOMAIN
 read -p 'Stripe Country: ' STRIPE_COUNTRY
 read -p 'Stripe Currency: ' STRIPE_CURRENCY
@@ -27,9 +28,6 @@ read -p 'Stripe Secret Key: ' STRIPE_SECRET_KEY
 read -p 'Stripe Storage Product Id: ' STRIPE_STORAGE_PRODUCT_ID
 read -p 'Stripe Storage Plan Id: ' STRIPE_STORAGE_PLAN_ID
 read -p 'Storage Price Per GB: ' STORAGE_PRICE_PER_GB
-read -p 'Stripe Mining Product Id: ' STRIPE_MINING_PRODUCT_ID
-read -p 'Stripe Mining Plan Id: ' STRIPE_MINING_PLAN_ID
-read -p 'Mining Price Per MB: ' MINING_PRICE_PER_MB
 read -p 'Stripe Webhook Secret Key: ' STRIPE_WEB_HOOK_SECRET_KEY
 
 # FIXME if user already exists
@@ -58,9 +56,10 @@ sudo ufw allow 80
 sudo ufw allow 443
 
 # Allow space ports
-sudo ufw allow 22222
-sudo ufw allow 22322
-sudo ufw allow 23232
+sudo ufw allow 22022 # connect port
+sudo ufw allow 22222 # get block port
+sudo ufw allow 22322 # get head port
+sudo ufw allow 23232 # broadcast port
 
 # Enable firewall
 sudo ufw enable
@@ -98,23 +97,19 @@ ALIAS=${DOMAIN} PASSWORD=${PASSWORD} ROOT_DIRECTORY=~/space/ ./spaceservergo-lin
 # Register as Registrar
 ALIAS=${DOMAIN} PASSWORD=${PASSWORD} ROOT_DIRECTORY=~/space/ ./spaceservergo-linux-amd64 register-registrar ${DOMAIN} ${STRIPE_COUNTRY} ${STRIPE_CURRENCY} ${STRIPE_PUBLISHABLE_KEY} ${STRIPE_STORAGE_PRODUCT_ID} ${STRIPE_STORAGE_PLAN_ID} ${STORAGE_PRICE_PER_GB}
 
-# Register as Miner
-ALIAS=${DOMAIN} PASSWORD=${PASSWORD} ROOT_DIRECTORY=~/space/ ./spaceservergo-linux-amd64 register-miner ${DOMAIN} ${STRIPE_COUNTRY} ${STRIPE_CURRENCY} ${STRIPE_PUBLISHABLE_KEY} ${STRIPE_MINING_PRODUCT_ID} ${STRIPE_MINING_PLAN_ID} ${MINING_PRICE_PER_MB}
-
 # Allow spaceservergo to bind to port 443 (HTTPS)
 # This is required each time the server binary is updated
 sudo setcap CAP_NET_BIND_SERVICE=+eip /home/${USERNAME}/space/spaceservergo-linux-amd64
 
 # Create space config
 cat <<EOT >> /home/${USERNAME}/space/config
+COMPANY=${COMPANY}
 STRIPE_COUNTRY=${STRIPE_COUNTRY}
 STRIPE_CURRENCY=${STRIPE_CURRENCY}
 STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
 STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
 STRIPE_STORAGE_PRODUCT_ID=${STRIPE_STORAGE_PRODUCT_ID}
 STRIPE_STORAGE_PLAN_ID=${STRIPE_STORAGE_PLAN_ID}
-STRIPE_MINING_PRODUCT_ID=${STRIPE_MINING_PRODUCT_ID}
-STRIPE_MINING_PLAN_ID=${STRIPE_MINING_PLAN_ID}
 STRIPE_WEB_HOOK_SECRET_KEY=${STRIPE_WEB_HOOK_SECRET_KEY}
 ALIAS=${DOMAIN}
 PASSWORD='${PASSWORD}'

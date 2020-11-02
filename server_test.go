@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Aletheia Ware LLC
+ * Copyright 2019-2020 Aletheia Ware LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,10 @@ import (
 	"testing"
 )
 
-func TestMUX(t *testing.T) {
+func TestMeasureStorage(t *testing.T) {
 	// TODO
 }
 
-func TestMiningHandler(t *testing.T) {
+func TestMUX(t *testing.T) {
 	// TODO
 }

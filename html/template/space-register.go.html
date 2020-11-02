@@ -22,10 +22,14 @@
             <p>Welcome, please provide your Alias and click Register;</p>
 
             <form action="space-register" method="POST">
+                <!-- TODO(v2) add CSRF token
+                <input type="hidden" id="token" name="token" value="{ { .Token } }" />
+                -->
                 Alias
                 <br>
                 <textarea name="alias" rows="1" cols="60">{{ .Alias }}</textarea>
                 <br>
+                <input type="hidden" id="next" name="next" value="{{ .Next }}" />
                 <br>
                 <script src="https://checkout.stripe.com/checkout.js" class="stripe-button"
                     data-billing-address="true"

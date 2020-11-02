@@ -94,11 +94,11 @@
                         </samp>
                     </li>
                     <li>
-                        <pre><code>$> ./space add [name] text/plain</code></pre>
+                        <pre><code>$> ./space add foobar text/plain</code></pre>
                         <p>Adds a new file with the given name, mime type, and contents read from stdin.</p>
                     </li>
                     <li>
-                        <pre><code>$> ./space add [name] text/plain foobar.txt</code></pre>
+                        <pre><code>$> ./space add foobar text/plain foobar.txt</code></pre>
                         <p>Adds a new file with the given name, mime type, and contents read from file.</p>
                         <samp>
                             $> ./space add foobar text/plain foobar.txt
@@ -106,28 +106,6 @@
                             Found keystore under /home/<strong>username</strong>/bc for <strong>username</strong>
                             <br/>
                             Enter keystore password:
-                            <br/>
-                            Mining Space-File-<strong>username</strong> 83221
-                            <br/>
-                            Mining Space-File-<strong>username</strong> 0 245 / 512
-                            <br/>
-                            Mining Space-File-<strong>username</strong> 1 260 / 512
-                            <br/>
-                            Mining Space-File-<strong>username</strong> 7 265 / 512
-                            <br/>
-                            Mining Space-File-<strong>username</strong> 11 268 / 512
-                            <br/>
-                            Mining Space-File-<strong>username</strong> 13 270 / 512
-                            <br/>
-                            Mining Space-File-<strong>username</strong> 23 275 / 512
-                            <br/>
-                            Mined Space-File-<strong>username</strong> 2019-02-15 00:07:19 1XzE6en-33OI7gqsy4lQZVE-VuNVN50AyAs2Ax4cKnt_p9kmolzud2s98sr37AVvqJWQ98tiC7nMbj8PRfs7SA
-                            <br/>
-                            Space-File-<strong>username</strong> updated to 1XzE6en-33OI7gqsy4lQZVE-VuNVN50AyAs2Ax4cKnt_p9kmolzud2s98sr37AVvqJWQ98tiC7nMbj8PRfs7SA
-                            <br/>
-                            Broadcasting Space-File-<strong>username</strong> 1XzE6en-33OI7gqsy4lQZVE-VuNVN50AyAs2Ax4cKnt_p9kmolzud2s98sr37AVvqJWQ98tiC7nMbj8PRfs7SA
-                            <br/>
-                            Mined foobar in 1 chunks
                             <br/>
                             Mining Space-Meta-<strong>username</strong> 6375
                             <br/>
@@ -142,15 +120,27 @@
                             Space-Meta-<strong>username</strong> updated to wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg
                             <br/>
                             Broadcasting Space-Meta-<strong>username</strong> wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg
+                            <br/>
+                            Mining Space-File-<strong>meta-id</strong> 83221
+                            <br/>
+                            Mining Space-File-<strong>meta-id</strong> 0 245 / 512
+                            <br/>
+                            Mining Space-File-<strong>meta-id</strong> 1 260 / 512
+                            <br/>
+                            Mining Space-File-<strong>meta-id</strong> 7 265 / 512
+                            <br/>
+                            Mining Space-File-<strong>meta-id</strong> 11 268 / 512
+                            <br/>
+                            Mining Space-File-<strong>meta-id</strong> 13 270 / 512
+                            <br/>
+                            Mining Space-File-<strong>meta-id</strong> 23 275 / 512
+                            <br/>
+                            Mined Space-File-<strong>meta-id</strong> 2019-02-15 00:07:19 1XzE6en-33OI7gqsy4lQZVE-VuNVN50AyAs2Ax4cKnt_p9kmolzud2s98sr37AVvqJWQ98tiC7nMbj8PRfs7SA
+                            <br/>
+                            Space-File-<strong>meta-id</strong> updated to 1XzE6en-33OI7gqsy4lQZVE-VuNVN50AyAs2Ax4cKnt_p9kmolzud2s98sr37AVvqJWQ98tiC7nMbj8PRfs7SA
+                            <br/>
+                            Broadcasting Space-File-<strong>meta-id</strong> 1XzE6en-33OI7gqsy4lQZVE-VuNVN50AyAs2Ax4cKnt_p9kmolzud2s98sr37AVvqJWQ98tiC7nMbj8PRfs7SA
                         </samp>
-                    </li>
-                    <li>
-                        <pre><code>$> ./space add-remote foo text/plain</code></pre>
-                        <p>Add a new file with the given name, mime type, and contents read from stdin using a Remote Mining Service to save your device battery.</p>
-                    </li>
-                    <li>
-                        <pre><code>$> ./space add-remote foo text/plain foobar.txt</code></pre>
-                        <p>Add a new file with the given name, mime type, and contents read from file using a Remote Mining Service to save your device battery.</p>
                     </li>
                     <li>
                         <pre><code>$> ./space list </code></pre>
@@ -167,10 +157,6 @@
                             wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg 2019-02-15 00:07:54 foobar text/plain 82Kb
                             <br/>
                             1
-                            <br/>
-                            Shared Files:
-                            <br/>
-                            0
                             <br/>
                         </samp>
                     </li>
@@ -191,12 +177,6 @@
                             Name: foobar
                             <br/>
                             Type: text/plain
-                            <br/>
-                            Size: 82Kb
-                            <br/>
-                            Chunks: 1
-                            <br/>
-                            &emsp;0 1XzE6en-33OI7gqsy4lQZVE-VuNVN50AyAs2Ax4cKnt_p9kmolzud2s98sr37AVvqJWQ98tiC7nMbj8PRfs7SA
                         </samp>
                     </li>
                     <li>
@@ -214,10 +194,6 @@
                             wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg 2019-02-15 00:07:54 foobar text/plain 82Kb
                             <br/>
                             1
-                            <br/>
-                            Shared Files:
-                            <br/>
-                            0
                             <br/>
                         </samp>
                     </li>
@@ -241,56 +217,6 @@
                         </samp>
                     </li>
                     <li>
-                        <pre><code>$> ./space share [hash] alice bob</code></pre>
-                        <p>Shares the file with the given hash with the given aliases.</p>
-                        <samp>
-                            $> ./space share wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg alice
-                            <br/>
-                            Found keystore under /home/<strong>username</strong>/bc for <strong>username</strong>
-                            <br/>
-                            Enter keystore password:
-                            <br/>
-                            Sharing foobar with [alice]
-                            <br/>
-                            Mining Space-Share-alice 2482
-                            <br/>
-                            Mining Space-Share-alice 0 252 / 512
-                            <br/>
-                            Mining Space-Share-alice 1 262 / 512
-                            <br/>
-                            Mining Space-Share-alice 8 265 / 512
-                            <br/>
-                            Mining Space-Share-alice 12 267 / 512
-                            <br/>
-                            Mining Space-Share-alice 19 272 / 512
-                            <br/>
-                            Mining Space-Share-alice 25 273 / 512
-                            <br/>Mined Space-Share-alice 2019-02-16 00:21:12 bR--pY11eKtYwC9xCoNnI2dKJMYa3k5Sl51QybXcpUPPL94DO-o7UNSn3jA631F59bLy8su5FvDfJ-PzOkTgrg
-                            <br/>Space-Share-alice updated to bR--pY11eKtYwC9xCoNnI2dKJMYa3k5Sl51QybXcpUPPL94DO-o7UNSn3jA631F59bLy8su5FvDfJ-PzOkTgrg
-                            <br/>Broadcasting Space-Share-alice bR--pY11eKtYwC9xCoNnI2dKJMYa3k5Sl51QybXcpUPPL94DO-o7UNSn3jA631F59bLy8su5FvDfJ-PzOkTgrg
-                            <br/>Shared alice bR--pY11eKtYwC9xCoNnI2dKJMYa3k5Sl51QybXcpUPPL94DO-o7UNSn3jA631F59bLy8su5FvDfJ-PzOkTgrg WJNeQvQ7qTzFzEyjLi_9lbgqydaRhQ2LDmDRT5LcD65m6fgdtbYncWdLgOtAglSRjr5HoqWXhgD46IHfm3dlqg
-                            <br/>
-                            <br/>
-                            <br/>
-                            $> ALIAS=alice ./space list
-                            <br/>
-                            Found keystore under /home/<strong>username</strong>/bc for alice
-                            <br/>
-                            Enter keystore password:
-                            <br/>
-                            Files:
-                            <br/>
-                            0
-                            <br/>
-                            Shared Files:
-                            <br/>
-                            wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg 2019-02-15 00:07:54 foobar text/plain 82Kb
-                            <br/>
-                            1
-                            <br/>
-                        </samp>
-                    </li>
-                    <li>
                         <pre><code>$> ./space tag [hash]</code></pre>
                         <p>Displays the tags (if any) of the file with the given hash.</p>
                     </li>
@@ -308,45 +234,45 @@
                             <br/>
                             Tagging foobar with [foo bar]
                             <br/>
-                            Mining Space-Tag-<strong>username</strong> 1395
+                            Mining Space-Tag-<strong>meta-id</strong> 1395
                             <br/>
-                            Mining Space-Tag-<strong>username</strong> 0 257 / 512
+                            Mining Space-Tag-<strong>meta-id</strong> 0 257 / 512
                             <br/>
-                            Mining Space-Tag-<strong>username</strong> 1 270 / 512
+                            Mining Space-Tag-<strong>meta-id</strong> 1 270 / 512
                             <br/>
-                            Mining Space-Tag-<strong>username</strong> 5 274 / 512
+                            Mining Space-Tag-<strong>meta-id</strong> 5 274 / 512
                             <br/>
-                            Mined Space-Tag-<strong>username</strong> 2019-02-15 09:34:37 YYQHI7-IvfDVuYJGJ9t_bfv2_x8ot9xg1F_0duZ31L8oRnQYFus62u_whhcKfBp5HmDe1thurCWhARyi2V9LcQ
+                            Mined Space-Tag-<strong>meta-id</strong> 2019-02-15 09:34:37 YYQHI7-IvfDVuYJGJ9t_bfv2_x8ot9xg1F_0duZ31L8oRnQYFus62u_whhcKfBp5HmDe1thurCWhARyi2V9LcQ
                             <br/>
-                            Space-Tag-<strong>username</strong> updated to YYQHI7-IvfDVuYJGJ9t_bfv2_x8ot9xg1F_0duZ31L8oRnQYFus62u_whhcKfBp5HmDe1thurCWhARyi2V9LcQ
+                            Space-Tag-<strong>meta-id</strong> updated to YYQHI7-IvfDVuYJGJ9t_bfv2_x8ot9xg1F_0duZ31L8oRnQYFus62u_whhcKfBp5HmDe1thurCWhARyi2V9LcQ
                             <br/>
-                            Multicasted Space-Tag-<strong>username</strong> block YYQHI7-IvfDVuYJGJ9t_bfv2_x8ot9xg1F_0duZ31L8oRnQYFus62u_whhcKfBp5HmDe1thurCWhARyi2V9LcQ to space.aletheiaware.com
+                            Multicasted Space-Tag-<strong>meta-id</strong> block YYQHI7-IvfDVuYJGJ9t_bfv2_x8ot9xg1F_0duZ31L8oRnQYFus62u_whhcKfBp5HmDe1thurCWhARyi2V9LcQ to space.aletheiaware.com
                             <br/>
-                            Multicasted Space-Tag-<strong>username</strong> block YYQHI7-IvfDVuYJGJ9t_bfv2_x8ot9xg1F_0duZ31L8oRnQYFus62u_whhcKfBp5HmDe1thurCWhARyi2V9LcQ to bc.aletheiaware.com
+                            Multicasted Space-Tag-<strong>meta-id</strong> block YYQHI7-IvfDVuYJGJ9t_bfv2_x8ot9xg1F_0duZ31L8oRnQYFus62u_whhcKfBp5HmDe1thurCWhARyi2V9LcQ to bc.aletheiaware.com
                             <br/>
                             Tagged wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg foo 3RNaQcMaBMzq56IbHeLh2HrKTp2OcztJS8E4tGeLZO-qTfo1c1YWaBS4wKMAtM1qwHhJMFAKtJF9Za169nKyIA
                             <br/>
-                            Mining Space-Tag-<strong>username</strong> 1396
+                            Mining Space-Tag-<strong>meta-id</strong> 1396
                             <br/>
-                            Mining Space-Tag-<strong>username</strong> 0 255 / 512
+                            Mining Space-Tag-<strong>meta-id</strong> 0 255 / 512
                             <br/>
-                            Mining Space-Tag-<strong>username</strong> 1 261 / 512
+                            Mining Space-Tag-<strong>meta-id</strong> 1 261 / 512
                             <br/>
-                            Mining Space-Tag-<strong>username</strong> 5 266 / 512
+                            Mining Space-Tag-<strong>meta-id</strong> 5 266 / 512
                             <br/>
-                            Mining Space-Tag-<strong>username</strong> 6 267 / 512
+                            Mining Space-Tag-<strong>meta-id</strong> 6 267 / 512
                             <br/>
-                            Mining Space-Tag-<strong>username</strong> 7 271 / 512
+                            Mining Space-Tag-<strong>meta-id</strong> 7 271 / 512
                             <br/>
-                            Mining Space-Tag-<strong>username</strong> 15 279 / 512
+                            Mining Space-Tag-<strong>meta-id</strong> 15 279 / 512
                             <br/>
-                            Mined Space-Tag-<strong>username</strong> 2019-02-15 09:34:37 Vl_5qofvfNDKKdBqMjO5LLrYGVmWcPMdvkxtrUnOiIpvDpc27CtiWOyuIz3KhvE9lLxqt9_y46UpL6_mv9OK9A
+                            Mined Space-Tag-<strong>meta-id</strong> 2019-02-15 09:34:37 Vl_5qofvfNDKKdBqMjO5LLrYGVmWcPMdvkxtrUnOiIpvDpc27CtiWOyuIz3KhvE9lLxqt9_y46UpL6_mv9OK9A
                             <br/>
-                            Space-Tag-<strong>username</strong> updated to Vl_5qofvfNDKKdBqMjO5LLrYGVmWcPMdvkxtrUnOiIpvDpc27CtiWOyuIz3KhvE9lLxqt9_y46UpL6_mv9OK9A
+                            Space-Tag-<strong>meta-id</strong> updated to Vl_5qofvfNDKKdBqMjO5LLrYGVmWcPMdvkxtrUnOiIpvDpc27CtiWOyuIz3KhvE9lLxqt9_y46UpL6_mv9OK9A
                             <br/>
-                            Multicasted Space-Tag-<strong>username</strong> block Vl_5qofvfNDKKdBqMjO5LLrYGVmWcPMdvkxtrUnOiIpvDpc27CtiWOyuIz3KhvE9lLxqt9_y46UpL6_mv9OK9A to space.aletheiaware.com
+                            Multicasted Space-Tag-<strong>meta-id</strong> block Vl_5qofvfNDKKdBqMjO5LLrYGVmWcPMdvkxtrUnOiIpvDpc27CtiWOyuIz3KhvE9lLxqt9_y46UpL6_mv9OK9A to space.aletheiaware.com
                             <br/>
-                            Multicasted Space-Tag-<strong>username</strong> block Vl_5qofvfNDKKdBqMjO5LLrYGVmWcPMdvkxtrUnOiIpvDpc27CtiWOyuIz3KhvE9lLxqt9_y46UpL6_mv9OK9A to bc.aletheiaware.com
+                            Multicasted Space-Tag-<strong>meta-id</strong> block Vl_5qofvfNDKKdBqMjO5LLrYGVmWcPMdvkxtrUnOiIpvDpc27CtiWOyuIz3KhvE9lLxqt9_y46UpL6_mv9OK9A to bc.aletheiaware.com
                             <br/>
                             Tagged wXH-KrAnsaHyewV1AmPd005Jr2fTZl27vv7atlVpHSE8RL_Rl8ii6usT3VhGviCQ9vrbH11OEAYbjVqXuU-Tpg bar AAs_V0ay75PyXLPDSyIak0meSdADasnZvgpAiewF-oAPWex8bMPkTEmRBUohAVHTQBBWjcr7HCx-tsIiDr0IpQ
                         </samp>
@@ -367,10 +293,6 @@
                             <br/>
                             1
                             <br/>
-                            Searching Shared Files for [foo]
-                            <br/>
-                            0
-                            <br/>
                         </samp>
                     </li>
                     <li>
@@ -389,7 +311,7 @@
             </p>
 
             <div class="footer">
-                <p>© 2019 Aletheia Ware LLC.  All rights reserved.</p>
+                <p>© 2019-2020 Aletheia Ware LLC.  All rights reserved.</p>
             </div>
         </div>
     </body>
