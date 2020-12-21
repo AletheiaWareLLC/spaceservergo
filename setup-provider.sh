@@ -92,10 +92,10 @@ unzip html.zip
 rm html.zip
 
 # Initialize Space
-ALIAS=${DOMAIN} PASSWORD=${PASSWORD} ROOT_DIRECTORY=~/space/ ./spaceservergo-linux-amd64 init
+ALIAS=${DOMAIN} PASSWORD=${PASSWORD} ROOT_DIRECTORY=~/space/ LIVE=${LIVE} ./spaceservergo-linux-amd64 init
 
 # Register as Registrar
-ALIAS=${DOMAIN} PASSWORD=${PASSWORD} ROOT_DIRECTORY=~/space/ ./spaceservergo-linux-amd64 register-registrar ${DOMAIN} ${STRIPE_COUNTRY} ${STRIPE_CURRENCY} ${STRIPE_PUBLISHABLE_KEY} ${STRIPE_STORAGE_PRODUCT_ID} ${STRIPE_STORAGE_PLAN_ID} ${STORAGE_PRICE_PER_GB}
+ALIAS=${DOMAIN} PASSWORD=${PASSWORD} ROOT_DIRECTORY=~/space/ LIVE=${LIVE} ./spaceservergo-linux-amd64 register-registrar ${DOMAIN} ${STRIPE_COUNTRY} ${STRIPE_CURRENCY} ${STRIPE_PUBLISHABLE_KEY} ${STRIPE_STORAGE_PRODUCT_ID} ${STRIPE_STORAGE_PLAN_ID} ${STORAGE_PRICE_PER_GB}
 
 # Allow spaceservergo to bind to port 443 (HTTPS)
 # This is required each time the server binary is updated
@@ -115,7 +115,8 @@ ALIAS=${DOMAIN}
 PASSWORD='${PASSWORD}'
 ROOT_DIRECTORY=/home/${USERNAME}/space/
 CERTIFICATE_DIRECTORY=/etc/letsencrypt/live/${DOMAIN}/
-LIVE=true
+LIVE=${LIVE}
+HTTPS=${HTTPS}
 EOT
 chmod 600 /home/${USERNAME}/space/config
 

@@ -133,13 +133,13 @@
             <p>Initialize Space with your_server_domain as the alias.</p>
 
             <pre><code>
-                ALIAS=your_server_domain ROOT_DIRECTORY=~/space/ ~/space/spaceserver-linux-amd64 init
+                ALIAS=your_server_domain ROOT_DIRECTORY=~/space/ LIVE=true ~/space/spaceserver-linux-amd64 init
             </code></pre>
 
             <p>Register your node as a registrar</p>
 
             <pre><code>
-                ALIAS=your_server_domain ROOT_DIRECTORY=~/space/ ~/space/spaceserver-linux-amd64 register-registrar your_domain your_country your_currency your_stripe_publishable_key your_stripe_storage_product_id your_stripe_storage_plan_id your_stripe_storage_price_per_gb
+                ALIAS=your_server_domain ROOT_DIRECTORY=~/space/ LIVE=true ~/space/spaceserver-linux-amd64 register-registrar your_domain your_country your_currency your_stripe_publishable_key your_stripe_storage_product_id your_stripe_storage_plan_id your_stripe_storage_price_per_gb
             </code></pre>
 
             <p>Allow spaceservergo to bind to port 443 (HTTPS) - This is required each time the server binary is updated</p>
@@ -167,6 +167,8 @@
                     ROOT_DIRECTORY=/home/your_server_username/space/
                     CERTIFICATE_DIRECTORY=/etc/letsencrypt/live/your_server_domain/
                     PEERS=space-sfo.aletheiaware.com,space-nyc.aletheiaware.com,bc.aletheiaware.com
+                    LIVE=${LIVE}
+                    HTTPS=${HTTPS}
             </code></pre>
 
             <h3>systemd</h3>
