@@ -145,6 +145,19 @@
                                         </table>
                                     </td>
                                 </tr>
+                                <tr>
+                                    <th style="text-align:right;">Meta</th>
+                                    <td>
+                                        <table>
+                                            {{ range $meta_key, $meta_value := $entry_value.Meta }}
+                                                <tr>
+                                                    <td style="text-align:right;">{{ $meta_key }}</td>
+                                                    <td>{{ $meta_value }}</td>
+                                                </tr>
+                                            {{ end }}
+                                        </table>
+                                    </td>
+                                </tr>
                             </table>
                         </td>
                     </tr>

@@ -11,8 +11,8 @@ github.com/AletheiaWareLLC/bcgo v1.0.1-0.20201220210928-3586645b309f h1:Pja97Cz6
 github.com/AletheiaWareLLC/bcgo v1.0.1-0.20201220210928-3586645b309f/go.mod h1:lSvGTkmUVYicsaX61D/LYJ9dbGqwLDw6TQRMm2hKdnk=
 github.com/AletheiaWareLLC/bcgo v1.0.1-0.20201221192740-cde598c706b5 h1:ihO4eQg94Z7B4XmZe0bIjwgwzjRABKbvrbUvj9ewAmY=
 github.com/AletheiaWareLLC/bcgo v1.0.1-0.20201221192740-cde598c706b5/go.mod h1:lSvGTkmUVYicsaX61D/LYJ9dbGqwLDw6TQRMm2hKdnk=
-github.com/AletheiaWareLLC/bcnetgo v1.0.1-0.20201221193047-adfdc4468167 h1:QRueR1RZcSPjG1SDjKA7C6lB74Fo9m41bXEtuehB0VM=
-github.com/AletheiaWareLLC/bcnetgo v1.0.1-0.20201221193047-adfdc4468167/go.mod h1:k3N4PE9/Q0N0Ix6C175v4HUjgGXGcnzZh/5Pv2pxsz0=
+github.com/AletheiaWareLLC/bcnetgo v1.0.1-0.20201221205329-30f25989b255 h1:jHQz5+9nVxwAJQa8F6IectLmL7DEF4j8wrxBDTLB90w=
+github.com/AletheiaWareLLC/bcnetgo v1.0.1-0.20201221205329-30f25989b255/go.mod h1:k3N4PE9/Q0N0Ix6C175v4HUjgGXGcnzZh/5Pv2pxsz0=
 github.com/AletheiaWareLLC/cryptogo v0.0.0-20201214162128-3e897372ea55/go.mod h1:8FSMWc3O8I3nprn9LYqYGZhZHaAW3OUF3bjvIDngbkU=
 github.com/AletheiaWareLLC/cryptogo v1.0.0 h1:ClrvZ36qsdzH7qcPYFmFSLRwuPz+kas4gzXHTf2YZLc=
 github.com/AletheiaWareLLC/cryptogo v1.0.0/go.mod h1:8FSMWc3O8I3nprn9LYqYGZhZHaAW3OUF3bjvIDngbkU=
