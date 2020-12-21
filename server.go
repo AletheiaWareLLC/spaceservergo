@@ -279,10 +279,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 	productId := os.Getenv("STRIPE_STORAGE_PRODUCT_ID")
 	planId := os.Getenv("STRIPE_STORAGE_PLAN_ID")
 	mux.HandleFunc("/space-subscribe-storage", bcnetgo.SubscriptionHandler(subscriptionTemplate, "/subscribed-storage.html", financego.Subscribe(node, processor, aliases, subscriptions, spacego.THRESHOLD, s.Listener, productId, planId)))
-	subscriptionTemplate, err = template.ParseFiles("html/template/space-subscribe-mining.go.html")
-	if err != nil {
-		return err
-	}
+
 	// Periodically measure storage usage per customer
 	ticker := time.NewTicker(24 * time.Hour) // Daily
 	stop := make(chan struct{})
