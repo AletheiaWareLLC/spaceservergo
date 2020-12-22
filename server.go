@@ -138,9 +138,11 @@ func (s *Server) RegisterRegistrar(node *bcgo.Node, domain, country, currency, p
 }
 
 func (s *Server) LoadChannel(node *bcgo.Node, channel *bcgo.Channel) {
-	if err := channel.Refresh(s.Cache, s.Network); err != nil {
-		log.Println(err)
-	}
+	go func() {
+		if err := channel.Refresh(s.Cache, s.Network); err != nil {
+			log.Println(err)
+		}
+	}()
 	// Add channel to node
 	node.AddChannel(channel)
 }
