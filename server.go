@@ -192,9 +192,9 @@ func (s *Server) Start(node *bcgo.Node) error {
 	// Serve Connect Requests
 	go bcnetgo.BindTCP(bcgo.PORT_CONNECT, bcnetgo.ConnectPortTCPHandler(s.Network))
 	// Serve Block Requests
-	go bcnetgo.BindTCP(bcgo.PORT_GET_BLOCK, bcnetgo.BlockPortTCPHandler(s.Cache, nil)) // Pass nil network to avoid request propagation
+	go bcnetgo.BindTCP(bcgo.PORT_GET_BLOCK, bcnetgo.BlockPortTCPHandler(s.Cache))
 	// Serve Head Requests
-	go bcnetgo.BindTCP(bcgo.PORT_GET_HEAD, bcnetgo.HeadPortTCPHandler(s.Cache, nil)) // Pass nil network to avoid request propagation
+	go bcnetgo.BindTCP(bcgo.PORT_GET_HEAD, bcnetgo.HeadPortTCPHandler(s.Cache))
 	// Serve Block Updates
 	go bcnetgo.BindTCP(bcgo.PORT_BROADCAST, bcnetgo.BroadcastPortTCPHandler(s.Cache, s.Network, func(name string) (*bcgo.Channel, error) {
 		return node.GetOrOpenChannel(name, func() *bcgo.Channel {
@@ -237,7 +237,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 	if err != nil {
 		return err
 	}
-	mux.HandleFunc("/alias", aliasservergo.AliasHandler(aliases, s.Cache, s.Network, aliasTemplate))
+	mux.HandleFunc("/alias", aliasservergo.AliasHandler(aliases, s.Cache, aliasTemplate))
 	aliasRegistrationTemplate, err := template.ParseFiles("html/template/alias-register.go.html")
 	if err != nil {
 		return err
@@ -247,17 +247,17 @@ func (s *Server) Start(node *bcgo.Node) error {
 	if err != nil {
 		return err
 	}
-	mux.HandleFunc("/block", bcnetgo.BlockHandler(s.Cache, nil, blockTemplate)) // Pass nil network to avoid request propagation
+	mux.HandleFunc("/block", bcnetgo.BlockHandler(s.Cache, blockTemplate))
 	channelTemplate, err := template.ParseFiles("html/template/channel.go.html")
 	if err != nil {
 		return err
 	}
-	mux.HandleFunc("/channel", bcnetgo.ChannelHandler(s.Cache, nil, channelTemplate)) // Pass nil network to avoid request propagation
+	mux.HandleFunc("/channel", bcnetgo.ChannelHandler(s.Cache, channelTemplate))
 	channelListTemplate, err := template.ParseFiles("html/template/channel-list.go.html")
 	if err != nil {
 		return err
 	}
-	mux.HandleFunc("/channels", bcnetgo.ChannelListHandler(s.Cache, nil, channelListTemplate, node.GetChannels)) // Pass nil network to avoid request propagation
+	mux.HandleFunc("/channels", bcnetgo.ChannelListHandler(s.Cache, channelListTemplate, node.GetChannels))
 	mux.HandleFunc("/keys", cryptogo.KeyShareHandler(make(cryptogo.KeyShareStore), 2*time.Minute))
 	registrarTemplate, err := template.ParseFiles("html/template/registrar.go.html")
 	if err != nil {
