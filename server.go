@@ -205,6 +205,16 @@ func (s *Server) Start(node *bcgo.Node) error {
 		}), nil
 	}))
 
+	if n := s.Network; n != nil {
+		for p := range n.Peers {
+			if p != "" && p != "localhost" {
+				if err := n.Connect(p, []byte(node.Alias)); err != nil {
+					log.Println(err)
+				}
+			}
+		}
+	}
+
 	// Redirect HTTP Requests to HTTPS
 	go http.ListenAndServe(":80", http.HandlerFunc(netgo.HTTPSRedirect(node.Alias, map[string]bool{
 		"/":                        true,
