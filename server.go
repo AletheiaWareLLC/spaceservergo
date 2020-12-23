@@ -477,6 +477,7 @@ func MeasureStorageUsage(node *bcgo.Node, processor financego.Processor, aliases
 		if registration == nil {
 			log.Println(errors.New(alias + " is not registered but is storing " + bcgo.DecimalSizeToString(size)))
 			// TODO add alias to blacklist. don't respond to block requests containing records created by blacklisted alias. remove from blacklist when subscription is added.
+			// TODO ignore peers from this blacklist
 			continue
 		}
 
