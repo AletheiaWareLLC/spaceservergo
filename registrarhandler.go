@@ -17,9 +17,9 @@
 package main
 
 import (
-	"github.com/AletheiaWareLLC/bcgo"
-	"github.com/AletheiaWareLLC/netgo"
-	"github.com/AletheiaWareLLC/spacego"
+	"aletheiaware.com/bcgo"
+	"aletheiaware.com/netgo"
+	"aletheiaware.com/spacego"
 	"html/template"
 	"log"
 	"math"
