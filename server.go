@@ -192,7 +192,19 @@ func (s *Server) Start(node *bcgo.Node) error {
 	defer yearly.Stop()
 
 	// Serve Connect Requests
-	go bcnetgo.BindTCP(bcgo.PORT_CONNECT, bcnetgo.ConnectPortTCPHandler(s.Network))
+	go bcnetgo.BindTCP(bcgo.PORT_CONNECT, bcnetgo.ConnectPortTCPHandler(s.Network, func(peer string) bool {
+		if err := aliases.Refresh(s.Cache, s.Network); err != nil {
+			log.Println(err)
+		}
+		// Ensure peer is registered Alias
+		if _, err := aliasgo.GetPublicKey(aliases, s.Cache, s.Network, peer); err != nil {
+			// Unregistered Alias
+			log.Println(err)
+			return false
+		}
+		// TODO ensure peer is a domain that resolves to conn.RemoteAddr()
+		return true
+	}))
 	// Serve Block Requests
 	go bcnetgo.BindTCP(bcgo.PORT_GET_BLOCK, bcnetgo.BlockPortTCPHandler(s.Cache))
 	// Serve Head Requests

@@ -5,8 +5,8 @@ aletheiaware.com/aliasservergo v1.1.0/go.mod h1:+8aCy8uRowlWB4jsS9rOJ5daQxk0klnD
 aletheiaware.com/bcgo v1.1.0/go.mod h1:ewAQ+/UMTxoB3WHRJXox5jcoAld1g3696p4xQaZoMLQ=
 aletheiaware.com/bcgo v1.1.1 h1:7Q+dtQ77Sp5Wnir87V1Jv/jEOXCRfQ87YIzjUd0NO14=
 aletheiaware.com/bcgo v1.1.1/go.mod h1:ewAQ+/UMTxoB3WHRJXox5jcoAld1g3696p4xQaZoMLQ=
-aletheiaware.com/bcnetgo v1.1.0 h1:7bC5zkFqDUimHApT30ovV/tIX1y6H5WL8Xe8xzDE89Q=
-aletheiaware.com/bcnetgo v1.1.0/go.mod h1:slIp0wl+7zRma8ox+vVhvfT/y9hym+CwtKixKcPdhJc=
+aletheiaware.com/bcnetgo v1.1.1 h1:Kr/VT5rE+nTXZJtbI+m44LIDmqz6DIVVmQUaHkE3zJY=
+aletheiaware.com/bcnetgo v1.1.1/go.mod h1:bv5i+zRPbimeiLC0S6RNkYE9rfKxbneyYWHbzApoePY=
 aletheiaware.com/cryptogo v1.1.0 h1:tidUH2Umbag0867yCjKMRa5X7i6XT/NAfycN65Laf8k=
 aletheiaware.com/cryptogo v1.1.0/go.mod h1:gGCQ4myo4KkjZg4+dST09Lsw6Y3qpIPbmLIQU38oHYY=
 aletheiaware.com/financego v1.1.0 h1:h4E2/nDXGWxFSFNcbTAW8RXafyH5+2TVUH6IL5uCLao=
