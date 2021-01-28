@@ -6,7 +6,7 @@
     <!-- TODO Web -->
     <!-- Tablet 2560x1600 -->
     <g stroke="white">
-        <rect rx="3%" x="23%" y="13%" width="54%" height="54%" />
+        <rect rx="3%" x="22%" y="12%" width="56%" height="56%" />
         <image xlink:href="space-tablet.png" x="25%" y="15%" width="50%" height="50%" preserveAspectRatio="xMidYMid meet" />
     </g>
     <!-- Phone 720x1280 -->

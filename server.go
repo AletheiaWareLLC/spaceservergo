@@ -202,7 +202,6 @@ func (s *Server) Start(node *bcgo.Node) error {
 			log.Println(err)
 			return false
 		}
-		// TODO ensure peer is a domain that resolves to conn.RemoteAddr()
 		return true
 	}))
 	// Serve Block Requests
@@ -212,6 +211,11 @@ func (s *Server) Start(node *bcgo.Node) error {
 	// Serve Block Updates
 	go bcnetgo.BindTCP(bcgo.PORT_BROADCAST, bcnetgo.BroadcastPortTCPHandler(s.Cache, s.Network, func(name string) (*bcgo.Channel, error) {
 		return node.GetOrOpenChannel(name, func() *bcgo.Channel {
+			// TODO allow if all record creators are registered and prefix is one of;
+			//   SPACE_PREFIX_DELTA
+			//   SPACE_PREFIX_META
+			//   SPACE_PREFIX_PREVIEW
+			//   SPACE_PREFIX_TAG
 			if strings.HasPrefix(name, spacego.SPACE_PREFIX) {
 				return bcgo.OpenPoWChannel(name, spacego.GetThreshold(name))
 			}
@@ -470,6 +474,7 @@ func MeasureStorageUsage(node *bcgo.Node, processor financego.Processor, aliases
 		log.Println(err)
 		return
 	}
+	// TODO collect all registrations, subscriptions, and public keys once in maps keyed by alias
 	for alias, size := range usage {
 		log.Println("Usage", alias, ":", bcgo.DecimalSizeToString(size))
 
