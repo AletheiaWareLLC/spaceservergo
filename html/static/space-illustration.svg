@@ -5,11 +5,11 @@
     <!-- Tablet 2560x1600 -->
     <g stroke="white" fill="black">
         <rect rx="3%" x="22%" y="12%" width="56%" height="56%" />
-        <image xlink:href="https://space.aletheiaware.com/space-tablet.png" x="25%" y="15%" width="50%" height="50%" preserveAspectRatio="xMidYMid meet" />
+        <image xlink:href="space-tablet.png" x="25%" y="15%" width="50%" height="50%" preserveAspectRatio="xMidYMid meet" />
     </g>
     <!-- Phone 720x1280 -->
     <g stroke="black" fill="white">
         <rect rx="2%" x="11.5%" y="36%" width="15%" height="48%" />
-        <image xlink:href="https://space.aletheiaware.com/space-phone.png" x="12%" y="40%" width="14%" height="40%" preserveAspectRatio="xMidYMid meet" />
+        <image xlink:href="space-phone.png" x="12%" y="40%" width="14%" height="40%" preserveAspectRatio="xMidYMid meet" />
     </g>
 </svg>
