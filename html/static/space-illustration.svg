@@ -1,17 +1,15 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" width="2560" height="1600">
-    <!-- Background -->
-    <rect fill="solid" stroke="black" width="100%" height="100%"/>
     <!-- TODO Command Line -->
     <!-- TODO Web -->
     <!-- Tablet 2560x1600 -->
-    <g stroke="white">
+    <g stroke="white" fill="black">
         <rect rx="3%" x="22%" y="12%" width="56%" height="56%" />
-        <image xlink:href="space-tablet.png" x="25%" y="15%" width="50%" height="50%" preserveAspectRatio="xMidYMid meet" />
+        <image xlink:href="https://space.aletheiaware.com/space-tablet.png" x="25%" y="15%" width="50%" height="50%" preserveAspectRatio="xMidYMid meet" />
     </g>
     <!-- Phone 720x1280 -->
-    <g fill="white">
+    <g stroke="black" fill="white">
         <rect rx="2%" x="11.5%" y="36%" width="15%" height="48%" />
-        <image xlink:href="space-phone.png" x="12%" y="40%" width="14%" height="40%" preserveAspectRatio="xMidYMid meet" />
+        <image xlink:href="https://space.aletheiaware.com/space-phone.png" x="12%" y="40%" width="14%" height="40%" preserveAspectRatio="xMidYMid meet" />
     </g>
 </svg>
