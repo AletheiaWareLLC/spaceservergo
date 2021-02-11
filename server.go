@@ -462,7 +462,7 @@ func main() {
 		Cert:     certDir,
 		Cache:    cache,
 		Network:  network,
-		Listener: &bcgo.PrintingMiningListener{Output: os.Stdout},
+		Listener: &bcgo.LoggingMiningListener{},
 	}
 
 	server.Handle(os.Args[1:])
