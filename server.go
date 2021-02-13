@@ -224,7 +224,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 	}))
 
 	if n := s.Network; n != nil {
-		for p := range n.Peers {
+		for _, p := range n.Peers() {
 			if p != "" && p != "localhost" {
 				if err := n.Connect(p, []byte(node.Alias)); err != nil {
 					log.Println(err)
