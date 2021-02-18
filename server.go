@@ -34,6 +34,7 @@ import (
 	"html/template"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"path"
@@ -294,17 +295,36 @@ func (s *Server) Start(node *bcgo.Node) error {
 	}
 
 	// Serve Connect Requests
-	go bcnetgo.BindTCP(bcgo.PORT_CONNECT, bcnetgo.ConnectPortTCPHandler(s.Network, func(peer string) bool {
-		if err := aliases.Refresh(s.Cache, s.Network); err != nil {
-			log.Println(err)
-		}
-		// Ensure peer is registered Alias
-		if _, err := aliasgo.GetPublicKey(aliases, s.Cache, s.Network, peer); err != nil {
+	go bcnetgo.BindTCP(bcgo.PORT_CONNECT, bcnetgo.ConnectPortTCPHandler(s.Network, func(address, peer string) bool {
+		s.RLock()
+		_, ok := s.keys[peer]
+		s.RUnlock()
+		if !ok {
 			// Unregistered Alias
-			log.Println(err)
 			return false
 		}
-		return true
+		h, _, err := net.SplitHostPort(address)
+		if err != nil {
+			log.Println(address, err)
+			return false
+		}
+		i := net.ParseIP(h)
+		if i == nil {
+			log.Println(address, "Could not parse IP:", h)
+			return false
+		}
+		// DNS lookup peer to get IP addresses
+		ips, err := net.LookupIP(peer)
+		if err != nil {
+			log.Println(address, err)
+			return false
+		}
+		for _, ip := range ips {
+			if ip.Equal(i) {
+				return true
+			}
+		}
+		return false
 	}))
 	// Serve Block Requests
 	go bcnetgo.BindTCP(bcgo.PORT_GET_BLOCK, bcnetgo.BlockPortTCPHandler(s.Cache))
