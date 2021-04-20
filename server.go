@@ -486,7 +486,7 @@ func (s *Server) MeasureStorageUsage(node bcgo.Node, processor financego.Process
 		// Get rsa.PublicKey for Alias
 		publicKey, ok := s.keys[alias]
 		if !ok {
-			log.Println(fmt.Errorf(aliasgo.ERROR_PUBLIC_KEY_NOT_FOUND, alias))
+			log.Println(aliasgo.ErrPublicKeyNotFound{Alias: alias})
 			continue
 		}
 
