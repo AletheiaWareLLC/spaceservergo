@@ -20,6 +20,13 @@ import (
 	"aletheiaware.com/aliasgo"
 	"aletheiaware.com/aliasservergo"
 	"aletheiaware.com/bcgo"
+	"aletheiaware.com/bcgo/account"
+	"aletheiaware.com/bcgo/cache"
+	"aletheiaware.com/bcgo/channel"
+	"aletheiaware.com/bcgo/identity"
+	"aletheiaware.com/bcgo/network"
+	"aletheiaware.com/bcgo/node"
+	"aletheiaware.com/bcgo/validation"
 	"aletheiaware.com/bcnetgo"
 	"aletheiaware.com/cryptogo"
 	"aletheiaware.com/financego"
@@ -48,33 +55,36 @@ type Server struct {
 	sync.RWMutex
 	Root          string
 	Cert          string
-	Cache         *bcgo.FileCache
-	Network       *bcgo.TCPNetwork
+	Cache         *cache.FileSystem
+	Network       *network.TCP
 	Listener      bcgo.MiningListener
 	keys          map[string]*rsa.PublicKey
 	registrations map[string]*financego.Registration
 	subscriptions map[string]*financego.Subscription
-	validators    map[string]*bcgo.PeriodicValidator
+	validators    map[string]validation.Periodic
 }
 
-func (s *Server) Init() (*bcgo.Node, error) {
+func (s *Server) Init() (bcgo.Node, error) {
 	// Add Space hosts to peers
-	for _, host := range spacego.GetSpaceHosts() {
+	for _, host := range spacego.SpaceHosts() {
 		if err := bcgo.AddPeer(s.Root, host); err != nil {
 			return nil, err
 		}
 	}
 
 	// Add BC host to peers
-	if err := bcgo.AddPeer(s.Root, bcgo.GetBCHost()); err != nil {
+	if err := bcgo.AddPeer(s.Root, bcgo.BCHost()); err != nil {
+		return nil, err
+	}
+
+	// Load Account
+	account, err := account.LoadRSA(s.Root)
+	if err != nil {
 		return nil, err
 	}
 
 	// Create Node
-	node, err := bcgo.NewNode(s.Root, s.Cache, s.Network)
-	if err != nil {
-		return nil, err
-	}
+	node := node.New(account, s.Cache, s.Network)
 
 	// Register Alias
 	if err := aliasgo.Register(node, s.Listener); err != nil {
@@ -84,11 +94,11 @@ func (s *Server) Init() (*bcgo.Node, error) {
 	return node, nil
 }
 
-func (s *Server) RegisterRegistrar(node *bcgo.Node, domain, country, currency, publishableKey, productId, planId string, priceGb uint64) (*spacego.Registrar, error) {
+func (s *Server) RegisterRegistrar(node bcgo.Node, domain, country, currency, publishableKey, productId, planId string, priceGb uint64) (*spacego.Registrar, error) {
 	// Create Registrar
 	registrar := &spacego.Registrar{
 		Merchant: &financego.Merchant{
-			Alias:          node.Alias,
+			Alias:          node.Account().Alias(),
 			Domain:         domain,
 			Processor:      financego.PaymentProcessor_STRIPE,
 			PublishableKey: publishableKey,
@@ -114,8 +124,7 @@ func (s *Server) RegisterRegistrar(node *bcgo.Node, domain, country, currency, p
 	}
 
 	// Generate Signature
-	signatureAlgorithm := cryptogo.SignatureAlgorithm_SHA512WITHRSA_PSS
-	signature, err := cryptogo.CreateSignature(node.Key, cryptogo.Hash(data), signatureAlgorithm)
+	signature, algorithm, err := node.Account().Sign(data)
 	if err != nil {
 		return nil, err
 	}
@@ -123,11 +132,11 @@ func (s *Server) RegisterRegistrar(node *bcgo.Node, domain, country, currency, p
 	// Create record
 	record := &bcgo.Record{
 		Timestamp:           bcgo.Timestamp(),
-		Creator:             node.Alias,
+		Creator:             node.Account().Alias(),
 		Payload:             data,
 		EncryptionAlgorithm: cryptogo.EncryptionAlgorithm_UNKNOWN_ENCRYPTION,
 		Signature:           signature,
-		SignatureAlgorithm:  signatureAlgorithm,
+		SignatureAlgorithm:  algorithm,
 	}
 
 	if l, ok := os.LookupEnv(bcgo.LIVE_FLAG); ok {
@@ -144,7 +153,7 @@ func (s *Server) RegisterRegistrar(node *bcgo.Node, domain, country, currency, p
 	return registrar, nil
 }
 
-func (s *Server) Start(node *bcgo.Node) error {
+func (s *Server) Start(node bcgo.Node) error {
 	company := os.Getenv("COMPANY")
 	publishableKey := os.Getenv("STRIPE_PUBLISHABLE_KEY")
 	productId := os.Getenv("STRIPE_STORAGE_PRODUCT_ID")
@@ -172,11 +181,11 @@ func (s *Server) Start(node *bcgo.Node) error {
 	})
 	registrations.AddTrigger(func() {
 		rs := make(map[string]*financego.Registration)
-		if err := bcgo.Read(registrations.Name, registrations.Head, nil, s.Cache, s.Network, node.Alias, node.Key, nil, func(entry *bcgo.BlockEntry, key, data []byte) error {
+		if err := bcgo.Read(registrations.Name(), registrations.Head(), nil, s.Cache, s.Network, node.Account(), nil, func(entry *bcgo.BlockEntry, key, data []byte) error {
 			// Unmarshal as Registration
 			registration := &financego.Registration{}
 			err := proto.Unmarshal(data, registration)
-			if err == nil && (registration.MerchantAlias == node.Alias) {
+			if err == nil && (registration.MerchantAlias == node.Account().Alias()) {
 				if _, ok := rs[registration.CustomerAlias]; !ok {
 					rs[registration.CustomerAlias] = registration
 				}
@@ -191,11 +200,11 @@ func (s *Server) Start(node *bcgo.Node) error {
 	})
 	subscriptions.AddTrigger(func() {
 		ss := make(map[string]*financego.Subscription)
-		if err := bcgo.Read(subscriptions.Name, subscriptions.Head, nil, s.Cache, s.Network, node.Alias, node.Key, nil, func(entry *bcgo.BlockEntry, key, data []byte) error {
+		if err := bcgo.Read(subscriptions.Name(), subscriptions.Head(), nil, s.Cache, s.Network, node.Account(), nil, func(entry *bcgo.BlockEntry, key, data []byte) error {
 			// Unmarshal as Subscription
 			subscription := &financego.Subscription{}
 			err := proto.Unmarshal(data, subscription)
-			if err == nil && (subscription.MerchantAlias == node.Alias) && (subscription.ProductId == productId) && (subscription.PlanId == planId) {
+			if err == nil && (subscription.MerchantAlias == node.Account().Alias()) && (subscription.ProductId == productId) && (subscription.PlanId == planId) {
 				if _, ok := ss[subscription.CustomerAlias]; !ok {
 					ss[subscription.CustomerAlias] = subscription
 				}
@@ -223,41 +232,41 @@ func (s *Server) Start(node *bcgo.Node) error {
 			}
 			// Add channel to node
 			node.AddChannel(v)
-			validator = spacego.GetValidator(node, v, s.Listener)
+			validator = spacego.Validator(node, v, s.Listener)
 			s.Lock()
 			s.validators[alias] = validator
 			s.Unlock()
 
-			metas := spacego.GetMetaChannelName(alias)
-			validator.Channels[metas] = true
-			m := node.GetOrOpenChannel(metas, func() *bcgo.Channel {
+			metas := spacego.MetaChannelName(alias)
+			validator.AddChannel(metas)
+			m := node.OpenChannel(metas, func() bcgo.Channel {
 				return spacego.OpenMetaChannel(alias)
 			})
 			m.AddTrigger(func() {
 				// Add delta, preview, tag channels for each file to validator
-				if err := bcgo.Iterate(m.Name, m.Head, nil, s.Cache, s.Network, func(hash []byte, block *bcgo.Block) error {
+				if err := bcgo.Iterate(m.Name(), m.Head(), nil, s.Cache, s.Network, func(hash []byte, block *bcgo.Block) error {
 					for _, entry := range block.Entry {
 						hash := base64.RawURLEncoding.EncodeToString(entry.RecordHash)
 						log.Println("Found file:", hash)
-						deltas := spacego.GetDeltaChannelName(hash)
-						validator.Channels[deltas] = true
-						d := node.GetOrOpenChannel(deltas, func() *bcgo.Channel {
+						deltas := spacego.DeltaChannelName(hash)
+						validator.AddChannel(deltas)
+						d := node.OpenChannel(deltas, func() bcgo.Channel {
 							return spacego.OpenDeltaChannel(hash)
 						})
 						if err := d.Refresh(s.Cache, s.Network); err != nil {
 							log.Println(err)
 						}
-						previews := spacego.GetPreviewChannelName(hash)
-						validator.Channels[previews] = true
-						p := node.GetOrOpenChannel(previews, func() *bcgo.Channel {
+						previews := spacego.PreviewChannelName(hash)
+						validator.AddChannel(previews)
+						p := node.OpenChannel(previews, func() bcgo.Channel {
 							return spacego.OpenPreviewChannel(hash)
 						})
 						if err := p.Refresh(s.Cache, s.Network); err != nil {
 							log.Println(err)
 						}
-						tags := spacego.GetTagChannelName(hash)
-						validator.Channels[tags] = true
-						t := node.GetOrOpenChannel(tags, func() *bcgo.Channel {
+						tags := spacego.TagChannelName(hash)
+						validator.AddChannel(tags)
+						t := node.OpenChannel(tags, func() bcgo.Channel {
 							return spacego.OpenTagChannel(hash)
 						})
 						if err := t.Refresh(s.Cache, s.Network); err != nil {
@@ -277,7 +286,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 		}
 	})
 
-	for _, c := range []*bcgo.Channel{
+	for _, c := range []bcgo.Channel{
 		aliases,
 		charges,
 		invoices,
@@ -295,7 +304,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 	}
 
 	// Serve Connect Requests
-	go bcnetgo.BindTCP(bcgo.PORT_CONNECT, bcnetgo.ConnectPortTCPHandler(s.Network, func(address, peer string) bool {
+	go bcnetgo.BindTCP(network.PORT_CONNECT, bcnetgo.ConnectPortTCPHandler(s.Network, func(address, peer string) bool {
 		s.RLock()
 		_, ok := s.keys[peer]
 		s.RUnlock()
@@ -327,19 +336,19 @@ func (s *Server) Start(node *bcgo.Node) error {
 		return false
 	}))
 	// Serve Block Requests
-	go bcnetgo.BindTCP(bcgo.PORT_GET_BLOCK, bcnetgo.BlockPortTCPHandler(s.Cache))
+	go bcnetgo.BindTCP(network.PORT_GET_BLOCK, bcnetgo.BlockPortTCPHandler(s.Cache))
 	// Serve Head Requests
-	go bcnetgo.BindTCP(bcgo.PORT_GET_HEAD, bcnetgo.HeadPortTCPHandler(s.Cache))
+	go bcnetgo.BindTCP(network.PORT_GET_HEAD, bcnetgo.HeadPortTCPHandler(s.Cache))
 	// Serve Block Updates
-	go bcnetgo.BindTCP(bcgo.PORT_BROADCAST, bcnetgo.BroadcastPortTCPHandler(s.Cache, s.Network, func(name string) (*bcgo.Channel, error) {
-		return node.GetOrOpenChannel(name, func() *bcgo.Channel {
+	go bcnetgo.BindTCP(network.PORT_BROADCAST, bcnetgo.BroadcastPortTCPHandler(s.Cache, s.Network, func(name string) (bcgo.Channel, error) {
+		return node.OpenChannel(name, func() bcgo.Channel {
 			// TODO allow if all record creators are registered and prefix is one of;
 			//   SPACE_PREFIX_DELTA
 			//   SPACE_PREFIX_META
 			//   SPACE_PREFIX_PREVIEW
 			//   SPACE_PREFIX_TAG
 			if strings.HasPrefix(name, spacego.SPACE_PREFIX) {
-				c := bcgo.OpenPoWChannel(name, spacego.GetThreshold(name))
+				c := channel.NewPoW(name, spacego.Threshold(name))
 				if err := c.Refresh(s.Cache, s.Network); err != nil {
 					log.Println(err)
 				}
@@ -352,7 +361,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 	if n := s.Network; n != nil {
 		for _, p := range n.Peers() {
 			if p != "" && p != "localhost" {
-				if err := n.Connect(p, []byte(node.Alias)); err != nil {
+				if err := n.Connect(p, []byte(node.Account().Alias())); err != nil {
 					log.Println(err)
 				}
 			}
@@ -360,7 +369,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 	}
 
 	// Redirect HTTP Requests to HTTPS
-	go http.ListenAndServe(":80", http.HandlerFunc(netgo.HTTPSRedirect(node.Alias, map[string]bool{
+	go http.ListenAndServe(":80", http.HandlerFunc(netgo.HTTPSRedirect(node.Account().Alias(), map[string]bool{
 		"/":                        true,
 		"/alias":                   true,
 		"/alias-register":          true,
@@ -401,21 +410,35 @@ func (s *Server) Start(node *bcgo.Node) error {
 	if err != nil {
 		return err
 	}
-	mux.HandleFunc("/channels", bcnetgo.ChannelListHandler(s.Cache, channelListTemplate, node.GetChannels))
+	mux.HandleFunc("/channels", bcnetgo.ChannelListHandler(s.Cache, channelListTemplate, node.Channels))
+	// TODO mux.HandleFunc("/validator")
+	// TODO mux.HandleFunc("/validators")
 	mux.HandleFunc("/keys", cryptogo.KeyShareHandler(make(cryptogo.KeyShareStore), 2*time.Minute))
 	registrarTemplate, err := template.ParseFiles("html/template/registrar.go.html")
 	if err != nil {
 		return err
 	}
 	mux.HandleFunc("/registrar", RegistrarHandler(registrarTemplate, func(alias string) (*spacego.Registrar, error) {
-		return spacego.GetRegistrar(registrars, s.Cache, nil, alias) // Pass nil network to avoid request propagation
+		return spacego.RegistrarForAlias(registrars, s.Cache, nil, alias) // Pass nil network to avoid request propagation
 	}))
 	registrarListTemplate, err := template.ParseFiles("html/template/registrar-list.go.html")
 	if err != nil {
 		return err
 	}
 	mux.HandleFunc("/registrars", RegistrarListHandler(registrarListTemplate, func() []*spacego.Registrar {
-		return spacego.GetRegistrars(registrars, s.Cache, nil) // Pass nil network to avoid request propagation
+		var rs []*spacego.Registrar
+		// Pass nil network to avoid request propagation
+		bcgo.Read(registrars.Name(), registrars.Head(), nil, s.Cache, nil, node.Account(), nil, func(entry *bcgo.BlockEntry, key, data []byte) error {
+			// Unmarshal as Registrar
+			r := &spacego.Registrar{}
+			err := proto.Unmarshal(data, r)
+			if err != nil {
+				return err
+			}
+			rs = append(rs, r)
+			return nil
+		})
+		return rs
 	}))
 	mux.HandleFunc("/stripe-webhook", bcnetgo.StripeWebhookHandler(StripeEventHandler))
 	registrationTemplate, err := template.ParseFiles("html/template/space-register.go.html")
@@ -423,7 +446,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 		return err
 	}
 	processor := &financego.Stripe{}
-	mux.HandleFunc("/space-register", bcnetgo.RegistrationHandler(node.Alias, company, publishableKey, registrationTemplate, financego.Register(node, processor, aliases, registrations, spacego.THRESHOLD_ACCOUNTING, s.Listener)))
+	mux.HandleFunc("/space-register", bcnetgo.RegistrationHandler(node.Account().Alias(), company, publishableKey, registrationTemplate, financego.Register(node, processor, aliases, registrations, spacego.THRESHOLD_ACCOUNTING, s.Listener)))
 	subscriptionTemplate, err := template.ParseFiles("html/template/space-subscribe-storage.go.html")
 	if err != nil {
 		return err
@@ -451,7 +474,7 @@ func (s *Server) Start(node *bcgo.Node) error {
 	return server.ListenAndServeTLS(path.Join(s.Cert, "fullchain.pem"), path.Join(s.Cert, "privkey.pem"))
 }
 
-func (s *Server) MeasureStorageUsage(node *bcgo.Node, processor financego.Processor, usageRecords *bcgo.Channel, productId, planId string) {
+func (s *Server) MeasureStorageUsage(node bcgo.Node, processor financego.Processor, usageRecords bcgo.Channel, productId, planId string) {
 	usage, err := s.Cache.MeasureStorageUsage(spacego.SPACE_PREFIX)
 	if err != nil {
 		log.Println(err)
@@ -488,7 +511,7 @@ func (s *Server) MeasureStorageUsage(node *bcgo.Node, processor financego.Proces
 			log.Println(errors.New("Registration Customer ID doesn't match Subscription Customer ID"))
 			continue
 		}
-		usageRecord, err := processor.NewUsageRecord(node.Alias, alias, subscription.SubscriptionId, subscription.SubscriptionItemId, productId, planId, time.Now().Unix(), int64(size))
+		usageRecord, err := processor.NewUsageRecord(node.Account().Alias(), alias, subscription.SubscriptionId, subscription.SubscriptionItemId, productId, planId, time.Now().Unix(), int64(size))
 		if err != nil {
 			log.Println(err)
 			continue
@@ -498,17 +521,16 @@ func (s *Server) MeasureStorageUsage(node *bcgo.Node, processor financego.Proces
 			log.Println(err)
 			continue
 		}
-		access := map[string]*rsa.PublicKey{
-			alias:      publicKey,
-			node.Alias: &node.Key.PublicKey,
-		}
-		_, record, err := bcgo.CreateRecord(bcgo.Timestamp(), node.Alias, node.Key, access, nil, data)
+		_, record, err := bcgo.CreateRecord(bcgo.Timestamp(), node.Account(), []bcgo.Identity{
+			identity.NewRSA(alias, publicKey),
+			node.Account(),
+		}, nil, data)
 		if err != nil {
 			log.Println(err)
 			continue
 		}
 		// Write record to cache
-		reference, err := bcgo.WriteRecord(usageRecords.Name, s.Cache, record)
+		reference, err := bcgo.WriteRecord(usageRecords.Name(), s.Cache, record)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -516,12 +538,12 @@ func (s *Server) MeasureStorageUsage(node *bcgo.Node, processor financego.Proces
 		log.Println("Wrote Usage Record", base64.RawURLEncoding.EncodeToString(reference.RecordHash))
 	}
 	// Mine UsageChannel
-	if _, _, err := node.Mine(usageRecords, spacego.THRESHOLD_ACCOUNTING, s.Listener); err != nil {
+	if _, _, err := bcgo.Mine(node, usageRecords, spacego.THRESHOLD_ACCOUNTING, s.Listener); err != nil {
 		log.Println(err)
 		return
 	}
 
-	if err := usageRecords.Push(s.Cache, node.Network); err != nil {
+	if err := usageRecords.Push(s.Cache, node.Network()); err != nil {
 		log.Println(err)
 		return
 	}
@@ -538,13 +560,15 @@ func (s *Server) Handle(args []string) {
 				return
 			}
 			log.Println("Initialized")
-			log.Println(node.Alias)
-			publicKeyBytes, err := cryptogo.RSAPublicKeyToPKIXBytes(&node.Key.PublicKey)
+			account := node.Account()
+			log.Println(account.Alias())
+			bytes, format, err := account.PublicKey()
 			if err != nil {
 				log.Println(err)
 				return
 			}
-			log.Println(base64.RawURLEncoding.EncodeToString(publicKeyBytes))
+			log.Println(base64.RawURLEncoding.EncodeToString(bytes))
+			log.Println(format)
 		case "register-registrar":
 			if len(args) > 7 {
 				domain := args[1]
@@ -562,11 +586,14 @@ func (s *Server) Handle(args []string) {
 					log.Println("Storage price per Gigabyte per month must be postive")
 					return
 				}
-				node, err := bcgo.NewNode(s.Root, s.Cache, s.Network)
+				account, err := account.LoadRSA(s.Root)
 				if err != nil {
 					log.Println(err)
 					return
 				}
+
+				node := node.New(account, s.Cache, s.Network)
+
 				registrar, err := s.RegisterRegistrar(node, domain, country, currency, publishableKey, productId, planId, uint64(priceGb))
 				if err != nil {
 					log.Println(err)
@@ -578,11 +605,14 @@ func (s *Server) Handle(args []string) {
 				log.Println("register-registrar <domain> <country-code> <currency-code> <publishable-key> <product-id> <plan-id> <price-per-gb>")
 			}
 		case "start":
-			node, err := bcgo.NewNode(s.Root, s.Cache, s.Network)
+			account, err := account.LoadRSA(s.Root)
 			if err != nil {
 				log.Println(err)
 				return
 			}
+
+			node := node.New(account, s.Cache, s.Network)
+
 			if err := s.Start(node); err != nil {
 				log.Println(err)
 				return
@@ -611,7 +641,7 @@ func PrintLegalese(output io.Writer) {
 }
 
 func main() {
-	rootDir, err := bcgo.GetRootDirectory()
+	rootDir, err := bcgo.RootDirectory()
 	if err != nil {
 		log.Println(err)
 		return
@@ -626,34 +656,34 @@ func main() {
 	defer logFile.Close()
 	log.Println("Log File:", logFile.Name())
 
-	certDir, err := bcgo.GetCertificateDirectory(rootDir)
+	certDir, err := bcgo.CertificateDirectory(rootDir)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	log.Println("Certificate Directory:", certDir)
 
-	cacheDir, err := bcgo.GetCacheDirectory(rootDir)
+	cacheDir, err := bcgo.CacheDirectory(rootDir)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	log.Println("Cache Directory:", cacheDir)
 
-	cache, err := bcgo.NewFileCache(cacheDir)
+	cache, err := cache.NewFileSystem(cacheDir)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	peers, err := bcgo.GetPeers(rootDir)
+	peers, err := bcgo.Peers(rootDir)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 	log.Println("Peers:", peers)
 
-	network := bcgo.NewTCPNetwork(peers...)
+	network := network.NewTCP(peers...)
 
 	server := &Server{
 		Root:          rootDir,
@@ -664,33 +694,33 @@ func main() {
 		keys:          make(map[string]*rsa.PublicKey),
 		registrations: make(map[string]*financego.Registration),
 		subscriptions: make(map[string]*financego.Subscription),
-		validators:    make(map[string]*bcgo.PeriodicValidator),
+		validators:    make(map[string]validation.Periodic),
 	}
 
 	server.Handle(os.Args[1:])
 }
 
-func Write(node *bcgo.Node, channel *bcgo.Channel, record *bcgo.Record, threshold uint64, listener bcgo.MiningListener) error {
-	if err := channel.Refresh(node.Cache, node.Network); err != nil {
+func Write(node bcgo.Node, channel bcgo.Channel, record *bcgo.Record, threshold uint64, listener bcgo.MiningListener) error {
+	if err := channel.Refresh(node.Cache(), node.Network()); err != nil {
 		log.Println(err)
 	}
 
 	// Write record to cache
-	reference, err := bcgo.WriteRecord(channel.Name, node.Cache, record)
+	reference, err := bcgo.WriteRecord(channel.Name(), node.Cache(), record)
 	if err != nil {
 		return err
 	}
 	log.Println("Wrote Record", base64.RawURLEncoding.EncodeToString(reference.RecordHash))
 
 	// Mine record into blockchain
-	hash, _, err := node.Mine(channel, threshold, listener)
+	hash, _, err := bcgo.Mine(node, channel, threshold, listener)
 	if err != nil {
 		return err
 	}
 	log.Println("Mined", base64.RawURLEncoding.EncodeToString(hash))
 
 	// Push update to peers
-	if err := channel.Push(node.Cache, node.Network); err != nil {
+	if err := channel.Push(node.Cache(), node.Network()); err != nil {
 		log.Println(err)
 	}
 	return nil
