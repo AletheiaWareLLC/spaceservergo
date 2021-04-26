@@ -124,7 +124,7 @@ func (s *Server) RegisterRegistrar(node bcgo.Node, domain, country, currency, pu
 	}
 
 	// Generate Signature
-	signature, algorithm, err := node.Account().Sign(data)
+	algorithm, signature, err := node.Account().Sign(data)
 	if err != nil {
 		return nil, err
 	}
@@ -562,7 +562,7 @@ func (s *Server) Handle(args []string) {
 			log.Println("Initialized")
 			account := node.Account()
 			log.Println(account.Alias())
-			bytes, format, err := account.PublicKey()
+			format, bytes, err := account.PublicKey()
 			if err != nil {
 				log.Println(err)
 				return
